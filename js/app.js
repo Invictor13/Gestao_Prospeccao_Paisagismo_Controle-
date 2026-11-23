@@ -7,16 +7,37 @@
   const persistencia = document.querySelector("#persistencia");
   const previaBackup = document.querySelector("#prever-backup");
   const tentarGravar = document.querySelector("#tentar-gravar");
+  const menu = document.querySelector("#menu-mobile");
+  const ferramentas = document.querySelector("#ferramentas-sistema");
+  document.querySelector("#abrir-sobre-dev").addEventListener("click", () => {
+    document.querySelector("#sobre-dev").showModal();
+  });
+  const demo = /(?:^\?|&)demo=1(?:&|$)/.test(window.location?.search ?? "");
   let dados;
-  let tela = "orcamento";
+  let tela = "painel";
   const { clientes, modelos, retornos } = Paisagismo.telasComerciais;
   const telas = { ...telasOrcamento, custos: telaCustos, etapas: telaEtapas, clientes, modelos, retornos,
-    comparar: Paisagismo.telaComparacao, proposta: Paisagismo.telaProposta };
+    comparar: Paisagismo.telaComparacao, proposta: Paisagismo.telaProposta, painel: Paisagismo.telaPainel };
+
+  function menuAberto(aberto) {
+    menu.setAttribute("aria-expanded", String(aberto));
+  }
+  menu.addEventListener("click", () => menuAberto(menu.getAttribute("aria-expanded") !== "true"));
+  document.querySelector(".barra-app").addEventListener("keydown", (evento) => {
+    if (evento.key !== "Escape") return;
+    if (ferramentas.open) {
+      ferramentas.open = false;
+      ferramentas.querySelector("summary").focus();
+    } else if (menu.getAttribute("aria-expanded") === "true") {
+      menuAberto(false);
+      menu.focus();
+    }
+  });
 
   function preferencia(seletor, chave, classe) {
     const controle = document.querySelector(seletor);
     try {
-      controle.checked = localStorage.getItem(chave) === "true";
+      controle.checked = !demo && localStorage.getItem(chave) === "true";
     } catch {
       controle.checked = false;
     }
@@ -24,6 +45,7 @@
     aplicar();
     controle.addEventListener("change", () => {
       aplicar();
+      if (demo) return;
       try {
         localStorage.setItem(chave, String(controle.checked));
       } catch {
@@ -40,19 +62,24 @@
   }
 
   try {
-    dados = armazenamento.carregar();
+    dados = demo ? Paisagismo.criarDemonstracao() : armazenamento.carregar();
   } catch {
     dados = Paisagismo.comercial.preparar(modelo());
     status("Os dados locais não puderam ser lidos. Você pode recuperar seus dados por um backup.");
   }
 
-  const sessao = Paisagismo.criarSessao(dados, armazenamento.gravar);
+  const sessao = Paisagismo.criarSessao(dados, demo ? () => {} : armazenamento.gravar);
+  if (demo) {
+    for (const seletor of ["#exportar", "#importar", "#link-demonstracao"]) document.querySelector(seletor).hidden = true;
+    document.querySelector("#aviso-demonstracao").hidden = false;
+    persistencia.textContent = "Sessão de demonstração";
+  }
 
   function indicarGravacao(ok, mensagem = "") {
     tentarGravar.hidden = ok;
     if (ok) {
-      persistencia.textContent = "Dados salvos neste navegador";
-      status(mensagem);
+      persistencia.textContent = demo ? "Alterações somente nesta demonstração" : "Dados salvos neste navegador";
+      status(demo && mensagem ? mensagem.replace(" neste navegador", " na demonstração") : mensagem);
     } else {
       persistencia.textContent = "Alterações somente nesta sessão";
       status(sessao.versaoPendente
@@ -100,6 +127,7 @@
     }
     const pagina = document.createElement("div");
     pagina.className = "entrada-tela";
+    if (["historico", "clientes", "retornos"].includes(destino)) pagina.classList.add("tela-centralizada");
     pagina.append(...telas[destino](ctx, item));
     conteudo.replaceChildren(pagina);
     window.scrollTo(0, 0);
@@ -107,6 +135,7 @@
 
   const ctx = {
     get dados() { return dados; },
+    demonstracao: demo,
     get versaoPendente() { return sessao.versaoPendente; },
     navegar, status, gravar, aoAlterar,
     salvarVersao(criarVersao) {
@@ -153,11 +182,22 @@
     },
   };
 
-  for (const botao of navegacao) botao.addEventListener("click", () => navegar(botao.dataset.tela));
-  document.querySelector("#exportar").addEventListener("click", () => armazenamento.exportar(dados));
-  document.querySelector("#exportar-antes").addEventListener("click", () => armazenamento.exportar(dados));
-  document.querySelector("#importar").addEventListener("click", () => arquivo.click());
+  for (const botao of navegacao) botao.addEventListener("click", () => {
+    const aberto = menu.getAttribute("aria-expanded") === "true";
+    menuAberto(false);
+    ferramentas.open = false;
+    navegar(botao.dataset.tela);
+    if (aberto) {
+      const titulo = conteudo.querySelector("h1");
+      titulo.tabIndex = -1;
+      titulo.focus();
+    }
+  });
+  document.querySelector("#exportar").addEventListener("click", () => { if (!demo) armazenamento.exportar(dados); });
+  document.querySelector("#exportar-antes").addEventListener("click", () => { if (!demo) armazenamento.exportar(dados); });
+  document.querySelector("#importar").addEventListener("click", () => { if (!demo) arquivo.click(); });
   arquivo.addEventListener("change", async () => {
+    if (demo) return;
     const selecionado = arquivo.files[0];
     arquivo.value = "";
     if (!selecionado) return;

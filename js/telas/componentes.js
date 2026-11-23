@@ -1,6 +1,8 @@
 Paisagismo.ui = (() => {
   const reais = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
   const numeros = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 6 });
+  const percentuais = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+  const animacoesValor = new WeakMap();
 
   function elemento(tag, texto, classe) {
     const item = document.createElement(tag);
@@ -31,11 +33,56 @@ Paisagismo.ui = (() => {
     return bloco;
   }
 
-  function linha(rotulo, valor, tag = "output") {
+  function dica(rotulo, explicacao) {
+    const icone = elemento("span", "?", "dica-formula");
+    icone.title = explicacao;
+    icone.setAttribute("aria-label", rotulo + ": " + explicacao);
+    return icone;
+  }
+
+  function linha(rotulo, valor, tag = "output", explicacao = "") {
     const bloco = elemento("div", undefined, "linha");
     const resultado = elemento(tag, valor);
-    bloco.append(elemento("span", rotulo), resultado);
+    const texto = elemento("span", rotulo);
+    if (explicacao) texto.append(dica(rotulo, explicacao));
+    bloco.append(texto, resultado);
     return { bloco, resultado };
+  }
+
+  function mostrarValor(campo, valor) {
+    if (campo.textContent === valor) return;
+    if (campo.textContent && window.matchMedia?.("(prefers-reduced-motion: no-preference)").matches) {
+      animacoesValor.get(campo)?.cancel();
+      const animacao = campo.animate?.([
+        { opacity: .58, transform: "translateY(2px)" },
+        { opacity: 1, transform: "translateY(0)" },
+      ], { duration: 320, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
+      if (animacao) animacoesValor.set(campo, animacao);
+    }
+    campo.textContent = valor;
+  }
+
+  function animarNumero(campo, textoFinal) {
+    campo.textContent = textoFinal;
+    if (window.matchMedia?.("(prefers-reduced-motion: no-preference)").matches) {
+      campo.animate?.([
+        { opacity: 0, transform: "translateY(5px)" },
+        { opacity: 1, transform: "translateY(0)" },
+      ], { duration: 340, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
+    }
+  }
+
+  function estadoVazio(titulo, descricao, passos = [], acao = null) {
+    const filhos = [elemento("p", descricao)];
+    if (passos.length) {
+      const trilha = elemento("div", undefined, "passos-vazio");
+      for (const passo of passos) trilha.append(elemento("span", passo, "passo-vazio-chip"));
+      filhos.push(trilha);
+    }
+    if (acao) filhos.push(acao);
+    const bloco = cartao(titulo, ...filhos);
+    bloco.classList.add("estado-vazio");
+    return bloco;
   }
 
   function entrada(rotulo, valor, atualizar, minimo, tag = "input", maximo) {
@@ -81,23 +128,71 @@ Paisagismo.ui = (() => {
     return bloco;
   }
 
+  function abrirDialogo(ancora, titulo, conteudo) {
+    const modal = elemento("dialog", undefined, "dialogo-edicao");
+    modal.setAttribute("aria-label", titulo);
+    const form = elemento("form");
+    form.method = "dialog";
+    const fechar = elemento("button", "Fechar", "botao secundario");
+    fechar.autofocus = true;
+    form.append(fechar);
+    const topo = elemento("div", undefined, "dialogo-topo");
+    topo.append(elemento("h2", titulo), form);
+    modal.append(topo, conteudo);
+    modal.addEventListener("close", () => {
+      modal.remove();
+      ancora.focus();
+    });
+    ancora.parentElement.append(modal);
+    modal.showModal();
+    return modal;
+  }
+
+  function paginador(tamanho, exibir, rotulo) {
+    let pagina = 0;
+    let total = 0;
+    const legenda = elemento("span", undefined, "paginacao-legenda");
+    legenda.setAttribute("role", "status");
+    const anterior = botao("Anterior", () => atualizar(total, pagina - 1), true);
+    const proxima = botao("Próxima", () => atualizar(total, pagina + 1), true);
+    const controles = elemento("nav", undefined, "paginacao");
+    controles.setAttribute("aria-label", rotulo);
+    controles.append(anterior, legenda, proxima);
+    function atualizar(quantidade, destino = pagina) {
+      total = quantidade;
+      const paginas = Math.max(1, Math.ceil(total / tamanho));
+      pagina = Math.max(0, Math.min(destino, paginas - 1));
+      legenda.textContent = (pagina + 1) + " de " + paginas + " · " + total + (total === 1 ? " item" : " itens");
+      controles.hidden = paginas <= 1;
+      anterior.disabled = pagina === 0;
+      proxima.disabled = pagina === paginas - 1;
+      exibir(pagina * tamanho, (pagina + 1) * tamanho);
+    }
+    return { controles, atualizar, mostrar: (quantidade, indice) => atualizar(quantidade, Math.floor(indice / tamanho)),
+      paginaDe: (indice) => indice % tamanho };
+  }
+
   function editor(titulo, unidade, itens, atualizar, colunas, opcoes = {}) {
     const lista = elemento("div", undefined, "lista-itens");
+    lista.setAttribute("role", "group");
+    lista.setAttribute("aria-label", colunas.join(" · "));
+    let atualizarBarrasVisiveis = () => {};
+    const paginacao = paginador(opcoes.porPagina ?? 8, renderizar, "Páginas de " + titulo.toLowerCase());
     let removido;
     const desfazer = botao("Desfazer remoção", () => {
       const { indice, item } = removido;
       itens.splice(indice, 0, item);
       if (atualizar()) {
         desfazer.hidden = true;
-        renderizar();
-        lista.children[indice].querySelector("textarea").focus();
+        paginacao.mostrar(itens.length, indice);
+        lista.children[paginacao.paginaDe(indice)].querySelector("textarea").focus();
       } else itens.splice(indice, 1);
     }, true);
     desfazer.hidden = true;
     const adicionar = botao("+ Adicionar item", () => {
       itens.push(["Novo item", 0]);
       if (atualizar()) {
-        renderizar();
+        paginacao.mostrar(itens.length, itens.length - 1);
         const novo = lista.lastElementChild.querySelector("textarea");
         novo.focus();
         novo.select();
@@ -105,12 +200,19 @@ Paisagismo.ui = (() => {
     }, true);
     adicionar.classList.add("adicionar");
 
-    function renderizar() {
-      lista.replaceChildren(...itens.map((item, indice) => {
+    function renderizar(inicio, fim) {
+      const atualizadoresLinha = [];
+      atualizarBarrasVisiveis = () => {
+        for (const fn of atualizadoresLinha) fn();
+      };
+      lista.replaceChildren(...itens.slice(inicio, fim).map((item, local) => {
+        const indice = inicio + local;
         const grupo = elemento("div", undefined, "editor");
         let subtotal;
+        let atualizarMeta = () => {};
         const atualizarSubtotal = () => {
           if (subtotal) subtotal.value = reais.format(item[1] * (item[2] ?? 1));
+          atualizarBarrasVisiveis();
         };
         function editar(coluna, valor) {
           const anterior = item.slice();
@@ -127,28 +229,83 @@ Paisagismo.ui = (() => {
           if (atualizar()) {
             removido = { indice, item };
             desfazer.hidden = false;
-            renderizar();
-            (lista.children[indice]?.querySelector("textarea") || adicionar).focus();
+            const proximo = Math.min(indice, itens.length - 1);
+            paginacao.mostrar(itens.length, proximo);
+            (lista.children[paginacao.paginaDe(proximo)]?.querySelector("textarea") || adicionar).focus();
           } else itens.splice(indice, 0, item);
         }, true);
         remover.classList.add("remover");
         remover.title = "Remover item";
         remover.setAttribute("aria-label", "Remover item " + (indice + 1));
+
+        const cabecalhoItem = elemento("div", undefined, "cabecalho-item-editor");
+        const numeroBadge = elemento("span", String(indice + 1).padStart(2, "0"), "indice-item");
+        numeroBadge.setAttribute("aria-hidden", "true");
         const nome = elemento("div", undefined, "nome-item");
+        const detalhes = botao("Detalhes", () => {
+          modal = abrirDialogo(detalhes, "Detalhes de " + (item[0] || "item"), extras);
+        }, true);
+        detalhes.classList.add("botao-detalhes-item");
+        const extras = elemento("div", undefined, "formulario-comercial detalhes-formulario");
+        let modal;
+        const nomeDetalhes = () => detalhes.setAttribute("aria-label", "Detalhes de " + (item[0] || "item " + (indice + 1)));
+        nomeDetalhes();
         nome.dataset.valor = item[0];
         const texto = entrada("Nome do item " + (indice + 1), item[0], (valor) => {
           if (!editar(0, valor)) return false;
           nome.dataset.valor = valor;
+          nomeDetalhes();
           return true;
         }, undefined, "textarea");
         texto.rows = 1;
         nome.append(texto);
-        grupo.append(nome,
-          entrada(unidade + " do item " + (indice + 1), item[1], (v) => editar(1, v)), remover);
+        cabecalhoItem.append(numeroBadge, nome);
+
+        const acoesItem = elemento("div", undefined, "acoes-item");
+        if (opcoes.tipo || opcoes.ordenar) acoesItem.append(detalhes);
+        acoesItem.append(remover);
+        grupo.append(cabecalhoItem, entrada(unidade + " do item " + (indice + 1), item[1], (v) => editar(1, v)), acoesItem);
+
+        if (opcoes.tipo === "etapa") {
+          const meta = elemento("div", undefined, "meta-item-editor");
+          const barra = elemento("div", undefined, "barra-proporcao");
+          const barraInterna = elemento("div", undefined, "barra-proporcao-interna");
+          barra.append(barraInterna);
+          const etiqueta = elemento("span", undefined, "etiqueta-item");
+          meta.append(barra, etiqueta);
+          grupo.append(meta);
+          atualizarMeta = () => {
+            const totalHoras = Math.max(0.01, itens.reduce((soma, [, h]) => soma + (Number(h) || 0), 0));
+            const pct = Math.min(100, Math.round(((Number(item[1]) || 0) / totalHoras) * 100));
+            barraInterna.setAttribute("style", "width:" + pct + "%");
+            const partes = [pct + "% do esforço"];
+            if (item[4] === true) {
+              partes.push("Entregável");
+              etiqueta.dataset.destaque = "publico";
+            } else {
+              delete etiqueta.dataset.destaque;
+            }
+            if (item[3]) partes.push(item[3]);
+            etiqueta.textContent = partes.join(" · ");
+          };
+          atualizadoresLinha.push(atualizarMeta);
+        }
+        if (opcoes.tipo === "custo") {
+          const meta = elemento("div", undefined, "meta-item-editor");
+          const etiqueta = elemento("span", undefined, "etiqueta-item");
+          meta.append(etiqueta);
+          atualizarMeta = () => {
+            const periodo = item[2] && item[2] !== "mensal" ? item[2] : "";
+            const categoria = item[3] || "";
+            const info = [periodo, categoria].filter(Boolean).join(" · ");
+            etiqueta.textContent = info;
+            meta.hidden = !info;
+          };
+          atualizadoresLinha.push(atualizarMeta);
+          grupo.append(meta);
+        }
+
         if (opcoes.tipo || opcoes.ordenar) {
-          const detalhes = elemento("details", undefined, "detalhes-item");
-          const extras = elemento("div", undefined, "formulario-comercial");
-          detalhes.append(elemento("summary", "Detalhes de " + (item[0] || "item")), extras);
           if (opcoes.tipo === "despesa") {
             subtotal = elemento("output");
             atualizarSubtotal();
@@ -178,27 +335,26 @@ Paisagismo.ui = (() => {
                 [itens[indice], itens[destino]] = [itens[destino], itens[indice]];
                 return;
               }
-              renderizar();
-              lista.children[destino].querySelector("summary").focus();
+              modal.close();
+              paginacao.mostrar(itens.length, destino);
+              lista.children[paginacao.paginaDe(destino)].querySelector("textarea").focus();
             };
             if (indice > 0) extras.append(botao("Mover acima", () => mover(indice - 1), true));
             if (indice < itens.length - 1) extras.append(botao("Mover abaixo", () => mover(indice + 1), true));
           }
-          grupo.append(detalhes);
         }
         return grupo;
       }));
+      atualizarBarrasVisiveis();
     }
-    renderizar();
+    paginacao.atualizar(itens.length);
     const topo = elemento("div", undefined, "editor-topo");
     const acoes = elemento("div", undefined, "acoes");
     acoes.append(desfazer, adicionar);
     topo.append(elemento("h2", titulo), acoes);
-    const cabecalho = elemento("div", undefined, "editor editor-cabecalho");
-    cabecalho.setAttribute("aria-hidden", "true");
-    cabecalho.append(...colunas.map((rotulo) => elemento("span", rotulo)));
-    const bloco = elemento("section", undefined, "cartao");
-    bloco.append(topo, cabecalho, lista);
+    const bloco = elemento("section", undefined, "cartao cartao-editor");
+    if (opcoes.colunas) lista.classList.add("lista-dupla");
+    bloco.append(topo, lista, paginacao.controles);
     return bloco;
   }
 
@@ -218,6 +374,9 @@ Paisagismo.ui = (() => {
     };
   }
 
-  return { elemento, botao, cabecalho, cartao, linha, campo, editor, editar,
-    brl: (valor) => reais.format(valor), numero: (valor) => numeros.format(valor) };
+  return { elemento, botao, cabecalho, cartao, linha, campo, editor, editar, mostrarValor, animarNumero,
+    estadoVazio, paginador, abrirDialogo,
+    brl: (valor) => reais.format(valor),
+    numero: (valor) => numeros.format(valor),
+    percentual: (valor) => percentuais.format(valor) + "%" };
 })();

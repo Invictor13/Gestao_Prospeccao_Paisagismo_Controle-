@@ -5,24 +5,115 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 92% 5%, #d9ebcf 0%, transparent 43%),
-    repeating-radial-gradient(ellipse at 109% -10%, transparent 0 38px, #49745015 39px 40px, transparent 41px 56px);
-  mask-image: linear-gradient(110deg, transparent 32%, #000 86%);
+    radial-gradient(ellipse at 92% 6%, #cfe5c3 0%, transparent 48%),
+    radial-gradient(ellipse at 8% 94%, #d6e7cf 0%, transparent 46%),
+    radial-gradient(ellipse at 50% 45%, #f5f8f180 0%, transparent 65%),
+    repeating-radial-gradient(ellipse at 108% -12%, transparent 0 38px, #2b674d17 38px 39px, transparent 40px 54px);
+  mask-image: linear-gradient(115deg, #0004 4%, #000 86%);
 }
-.preferencia-fundo { display: flex; align-items: center; gap: 7px; padding: 6px 12px; font-size: .875rem; }
-.preferencia-fundo input { width: auto; accent-color: #cce6b9; }
+.preferencia-fundo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  font-size: .875rem;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.preferencia-fundo:hover { background: #ffffff14; }
+.preferencia-fundo input { width: auto; accent-color: var(--brotos); }
 
 @media (prefers-reduced-motion: no-preference) {
   .fundo-animado::before { animation: luz-do-fundo 16s ease-in-out infinite alternate; }
-  .entrada-tela { animation: entrada-tela 170ms ease-out; }
-  #status:not([hidden]) { animation: entrada-tela 160ms ease-out; }
-  .botao { transition: background-color 150ms ease, border-color 150ms ease; }
+  .entrada-tela { animation: entrada-tela var(--duracao-tela) var(--curva); }
+  #status:not([hidden]) { animation: entrada-tela var(--duracao-botao) var(--curva); }
+  .botao,
+  .barra-app button,
+  .barra-app summary,
+  .link-rodape,
+  .grupos-comerciais button {
+    transition:
+      background-color var(--duracao-botao) var(--curva),
+      border-color var(--duracao-botao) var(--curva),
+      color var(--duracao-botao) var(--curva),
+      box-shadow var(--duracao-botao) var(--curva),
+      transform var(--duracao-botao) var(--curva);
+  }
+  .cartao,
+  .editor,
+  .indicador-card,
+  .cartao-proposta-item,
+  .item-agenda {
+    transition:
+      background-color var(--duracao-cartao) var(--curva),
+      border-color var(--duracao-cartao) var(--curva),
+      box-shadow var(--duracao-cartao) var(--curva),
+      transform var(--duracao-cartao) var(--curva);
+  }
+  .barra-preenchimento,
+  .barra-proporcao-interna,
+  .segmento-composicao {
+    transition: width var(--duracao-numero) var(--curva);
+    animation: preencher-barra 420ms var(--curva);
+  }
+  details.cartao[open] > *:not(summary) {
+    animation: expandir-detalhes var(--duracao-detalhes) var(--curva);
+  }
+  .preco-atualizado {
+    animation: pulso-preco var(--duracao-numero) var(--curva);
+  }
+  @media (hover: hover) {
+    .botao:not(:disabled):hover {
+      box-shadow: 0 4px 12px #153c3024;
+      transform: translateY(-1px);
+    }
+    .botao:not(:disabled):active {
+      transform: translateY(0);
+    }
+    .editor:hover {
+      background-color: #f3f7ef;
+      border-color: #b5cbb9;
+    }
+    details.cartao:hover,
+    .cartao-interativo:hover,
+    .catalogo-modelos .cartao:hover,
+    .indicadores-secundarios > div:hover,
+    .cartao-proposta-item:hover,
+    .item-agenda:hover {
+      border-color: var(--salvia);
+      box-shadow: var(--sombra-elevada);
+      transform: translateY(-2px);
+    }
+  }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @keyframes luz-do-fundo {
-  from { opacity: .45; }
-  to { opacity: .95; }
+  from { opacity: .48; }
+  to { opacity: .96; }
 }
 @keyframes entrada-tela {
-  from { opacity: .76; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes expandir-detalhes {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes preencher-barra {
+  from { transform: scaleX(0.15); transform-origin: left; }
+  to { transform: scaleX(1); transform-origin: left; }
+}
+@keyframes pulso-preco {
+  0% { box-shadow: 0 0 0 0 #2b674d38; }
+  50% { box-shadow: 0 0 0 6px #2b674d00; }
+  100% { box-shadow: 0 0 0 0 transparent; }
 }
