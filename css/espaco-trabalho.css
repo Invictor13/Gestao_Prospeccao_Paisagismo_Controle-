@@ -1,8 +1,16 @@
 :root {
-  --largura-app: 1680px;
-  --recuo-app: clamp(14px, 2.8vw, 48px);
+  --largura-app: 1380px;
+  --recuo-app: clamp(16px, 2.8vw, 44px);
 }
-main { padding-block: clamp(12px, 2.2vh, 26px); }
+main {
+  padding-block: clamp(14px, 2.4vh, 28px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+#conteudo {
+  width: 100%;
+}
 .rodape-app { position: sticky; bottom: 0; z-index: 3; }
 .rodape-interno { padding-block: 10px; }
 .destaque-painel { padding-block: clamp(16px, 3.3vh, 36px); }
@@ -298,6 +306,87 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
   border-color: var(--floresta);
 }
 
+@media (min-width: 961px) {
+  .grade-orcamento {
+    grid-template-columns: minmax(260px, 1fr) minmax(340px, 1.25fr) minmax(260px, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+  .grade-orcamento > .pilha {
+    display: contents;
+  }
+  .grade-orcamento .preco {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 24px;
+    row-gap: 4px;
+    padding: 16px 22px;
+  }
+  .grade-orcamento .preco h2 {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+    font-size: 1.05rem;
+  }
+  .grade-orcamento .preco .subtitulo-preco {
+    grid-column: 1;
+    grid-row: 2;
+    justify-content: flex-start;
+    gap: 12px;
+    margin-top: 2px;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .grade-orcamento .preco > strong {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    font-size: clamp(1.85rem, 2.7vw, 2.5rem);
+    text-align: right;
+  }
+  .grade-orcamento .preco .aviso-margem {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+  }
+  .grade-orcamento .orcamento-dados,
+  .grade-orcamento .cartao-editor,
+  .grade-orcamento > .pilha.resumo > .cartao:not(.preco) {
+    grid-row: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .grade-orcamento .parametros {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    flex: 1;
+    align-content: space-between;
+  }
+  .grade-orcamento .orcamento-dados > .botao {
+    margin-top: 14px;
+  }
+  .grade-orcamento .cartao-editor .lista-itens {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .grade-orcamento .cartao-editor .editor {
+    margin-bottom: 0;
+  }
+  .grade-orcamento .campo { gap: 4px; }
+  .grade-orcamento .campo > input, .grade-orcamento .campo > select { min-height: 38px; }
+  .grade-orcamento .campo > span { font-size: .85rem; }
+  .grade-orcamento .grupo-memoria { padding-block: 3px; }
+  .grade-orcamento .grupo-memoria + .grupo-memoria { margin-top: 4px; padding-top: 8px; }
+  .grade-orcamento .cartao:not(.preco) { padding: 16px 18px; }
+  .grade-orcamento .linha { padding-block: 4px; font-size: .875rem; }
+}
+
 @media (min-width: 1041px) {
   #aviso-demonstracao:not([hidden]) {
     display: flex;
@@ -323,19 +412,6 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
   .painel-espaco .status-proposta { margin-top: 2px; }
   .painel-espaco .linha p { line-height: 1.3; }
   .painel-espaco .funil-linha { margin-top: 7px; }
-  .grade-orcamento {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(260px, .92fr);
-    gap: 14px;
-  }
-  .grade-orcamento > .pilha:first-child { display: contents; }
-  .grade-orcamento .parametros { grid-template-columns: 1fr; gap: 8px; }
-  .grade-orcamento .campo { gap: 4px; }
-  .grade-orcamento .campo > input, .grade-orcamento .campo > select { min-height: 36px; }
-  .grade-orcamento .campo > span { font-size: .84rem; }
-  .grade-orcamento .resumo { position: static; gap: 12px; }
-  .grade-orcamento .cartao { padding: 14px 16px; }
-  .grade-orcamento .linha { padding-block: 4px; font-size: .875rem; }
-  .grade-orcamento .preco strong { font-size: clamp(1.6rem, 2.6vw, 2.4rem); }
   .grade-cadastro { grid-template-columns: minmax(0, 1fr) minmax(265px, .36fr); gap: 16px; }
   .lista-dupla {
     display: grid;
