@@ -19,7 +19,9 @@ Paisagismo.armazenamento = (() => {
   function ler(conteudo) {
     const dados = JSON.parse(conteudo);
     const operacao = dados?.operacao;
-    if (dados?.versao !== 1 || !operacaoValida(operacao) || !Array.isArray(dados.salvos)) {
+    if (dados?.versao !== 1 || !operacaoValida(operacao) || !Array.isArray(dados.salvos)
+      || (dados.exportadoEm !== undefined && (!texto(dados.exportadoEm)
+        || !Number.isFinite(Date.parse(dados.exportadoEm))))) {
       throw new Error("Formato de backup inválido.");
     }
     const custos = Paisagismo.custos(operacao);

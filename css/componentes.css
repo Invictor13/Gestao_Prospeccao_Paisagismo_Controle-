@@ -80,6 +80,7 @@ input:invalid { border-color: #b34738; }
 }
 .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
 #status { background: #fff; border: 1px solid var(--borda); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; }
+#tentar-gravar { margin-bottom: 16px; }
 .sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 960px) {
   .grade { grid-template-columns: 1fr; }

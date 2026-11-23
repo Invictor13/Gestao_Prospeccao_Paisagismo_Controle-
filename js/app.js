@@ -6,6 +6,7 @@
   const arquivo = document.querySelector("#arquivo");
   const persistencia = document.querySelector("#persistencia");
   const previaBackup = document.querySelector("#prever-backup");
+  const tentarGravar = document.querySelector("#tentar-gravar");
   let dados;
   let tela = "orcamento";
   const { clientes, modelos, retornos } = Paisagismo.telasComerciais;
@@ -45,16 +46,34 @@
     status("Os dados locais não puderam ser lidos. Você pode recuperar seus dados por um backup.");
   }
 
-  function gravar(mensagem = "") {
-    try {
-      armazenamento.gravar(dados);
+  const sessao = Paisagismo.criarSessao(dados, armazenamento.gravar);
+
+  function indicarGravacao(ok, mensagem = "") {
+    tentarGravar.hidden = ok;
+    if (ok) {
       persistencia.textContent = "Dados salvos neste navegador";
       status(mensagem);
-    } catch {
+    } else {
       persistencia.textContent = "Alterações somente nesta sessão";
-      status("As alterações estão nesta sessão. Exporte um backup antes de fechar a página.");
+      status(sessao.versaoPendente
+        ? "Orçamento pendente de gravação. Tente novamente ou exporte um backup antes de fechar."
+        : "As alterações estão nesta sessão. Tente novamente ou exporte um backup antes de fechar.");
     }
+    return ok;
   }
+
+  function gravar(mensagem = "") {
+    return indicarGravacao(sessao.gravar(), mensagem);
+  }
+
+  tentarGravar.addEventListener("click", () => {
+    const pendente = sessao.versaoPendente;
+    if (indicarGravacao(sessao.repetir(), pendente ? "Orçamento salvo neste navegador." : "Alterações salvas neste navegador.")
+      && ["historico", "orcamento", "salvo"].includes(tela)) {
+      if (tela === "salvo") navegar(tela, itemAberto);
+      else navegar(tela);
+    }
+  });
 
   function aoAlterar(exibir) {
     return () => {
@@ -70,8 +89,10 @@
     };
   }
 
+  let itemAberto;
   function navegar(destino, item) {
     tela = destino;
+    itemAberto = item;
     for (const botao of navegacao) {
       if (botao.dataset.tela === destino || (["salvo", "comparar", "proposta"].includes(destino) && botao.dataset.tela === "historico")) {
         botao.setAttribute("aria-current", "page");
@@ -86,7 +107,11 @@
 
   const ctx = {
     get dados() { return dados; },
+    get versaoPendente() { return sessao.versaoPendente; },
     navegar, status, gravar, aoAlterar,
+    salvarVersao(criarVersao) {
+      return indicarGravacao(sessao.salvarVersao(criarVersao), "Orçamento salvo neste navegador.");
+    },
     abrir: (indice) => navegar("salvo", dados.salvos[indice]),
     duplicar(item, revisao = false) {
       const copia = structuredClone(item.projeto);
@@ -155,8 +180,12 @@
     previaBackup.showModal();
     previaBackup.addEventListener("close", () => {
       if (previaBackup.returnValue !== "restaurar") return;
-      dados = backup;
-      gravar("Backup restaurado.");
+      if (!sessao.restaurar(backup)) {
+        status("O backup não pôde ser gravado. Os dados atuais foram mantidos. Libere espaço e tente importar novamente.");
+        return;
+      }
+      dados = sessao.dados;
+      indicarGravacao(true, "Backup restaurado.");
       navegar(["salvo", "comparar", "proposta"].includes(tela) ? "historico" : tela);
     }, { once: true });
   });

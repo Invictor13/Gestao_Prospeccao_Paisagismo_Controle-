@@ -40,18 +40,21 @@ Paisagismo.telasOrcamento = (() => {
     const nome = ui.campo("Nome do projeto", projeto.nome, ui.editar(projeto, "nome", atualizar));
     const comparar = ui.botao("Comparar cenários", () => ctx.navegar("comparar"), true);
     comparar.hidden = !ctx.dados.salvos.length;
-    const salvar = ui.botao("Salvar orçamento", () => {
-      if (!projeto.nome.trim()) {
+    const salvar = ui.botao(ctx.versaoPendente ? "Gravar versão pendente" : "Salvar orçamento", () => {
+      if (!ctx.versaoPendente && !projeto.nome.trim()) {
         ctx.status("Informe o nome do projeto para salvar o orçamento.");
         nome.lastElementChild.focus();
         return;
       }
-      const clienteNome = ctx.dados.clientes.find((cliente) => cliente.id === projeto.cliente)?.nome || "";
-      projeto.idProjeto ||= Paisagismo.comercial.chaveProjeto(projeto);
-      ctx.dados.salvos.unshift({ data: new Date().toISOString(), hora, projeto: structuredClone(projeto),
-        clienteNome, operacao: structuredClone(ctx.dados.operacao) });
-      Paisagismo.comercial.preparar(ctx.dados);
-      ctx.gravar("Orçamento salvo.");
+      const ok = ctx.salvarVersao(() => {
+        const clienteNome = ctx.dados.clientes.find((cliente) => cliente.id === projeto.cliente)?.nome || "";
+        projeto.idProjeto ||= Paisagismo.comercial.chaveProjeto(projeto);
+        const versao = { data: new Date().toISOString(), hora, projeto: structuredClone(projeto),
+          clienteNome, operacao: structuredClone(ctx.dados.operacao) };
+        Paisagismo.comercial.preparar({ ...ctx.dados, salvos: [versao] });
+        return versao;
+      });
+      salvar.textContent = ok ? "Salvar orçamento" : "Gravar versão pendente";
       comparar.hidden = false;
     });
     const novo = ui.botao("Novo orçamento", ctx.novo, true);
@@ -120,7 +123,8 @@ Paisagismo.telasOrcamento = (() => {
         const detalhes = ui.elemento("div");
         const valor = Paisagismo.calcular(item.projeto, item.hora).preco;
         detalhes.append(ui.elemento("strong", item.projeto.nome),
-          ui.elemento("p", [item.clienteNome, item.acompanhamento.situacao, ui.brl(valor),
+          ui.elemento("p", [item === ctx.versaoPendente && "Gravação pendente", item.clienteNome,
+            item.acompanhamento.situacao, ui.brl(valor),
             data.format(new Date(item.data))].filter(Boolean).join(" · ")));
         linha.append(detalhes, ui.botao("Abrir", () => ctx.abrir(indice), true));
         return [linha];
@@ -173,7 +177,9 @@ Paisagismo.telasOrcamento = (() => {
       ui.botao("Criar revisão", () => ctx.duplicar(item, true), true),
       ui.botao("Duplicar como novo projeto", () => ctx.duplicar(item), true),
       ui.botao("Prévia da proposta", () => ctx.navegar("proposta", item)));
-    return [ui.cabecalho(item.projeto.nome, "Salvo em " + data.format(new Date(item.data)), acoes), grade];
+    const descricao = (item === ctx.versaoPendente ? "Gravação pendente · " : "Salvo em ")
+      + data.format(new Date(item.data));
+    return [ui.cabecalho(item.projeto.nome, descricao, acoes), grade];
   }
 
   return { orcamento, historico, salvo };

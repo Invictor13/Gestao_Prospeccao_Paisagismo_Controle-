@@ -15,6 +15,12 @@ Gestão offline de clientes, orçamentos e propostas de paisagismo.
 
 O sistema grava as alterações no armazenamento do navegador quando disponível. Exporte um backup antes de mudar de navegador ou mover a pasta.
 
+Se o navegador recusar a gravação de um orçamento, a versão aparece como **Gravação pendente** no histórico. Use **Tentar gravar novamente** para persistir a mesma versão ou exporte um backup antes de fechar a página. A restauração só substitui os dados da sessão depois que o backup validado for gravado.
+
+## Testes
+
+Execute `node --test` na raiz do projeto com Node.js 18 ou superior. Os testes usam os mesmos scripts carregados pelo HTML e simulam o armazenamento local. O aplicativo continua abrindo diretamente pelo `index.html`.
+
 Abra um registro em **Orçamentos salvos** para criar uma revisão do mesmo projeto ou duplicá-lo como um novo projeto. A cópia ocupa o lugar do rascunho após confirmação e usa o custo por hora atual. Em **Comparar cenários**, selecione duas versões salvas ou use o rascunho em um dos lados. A diferença é calculada como cenário menos base.
 
 ## Estrutura
