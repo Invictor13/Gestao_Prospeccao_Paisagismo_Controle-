@@ -9,6 +9,9 @@
   const tentarGravar = document.querySelector("#tentar-gravar");
   const menu = document.querySelector("#menu-mobile");
   const ferramentas = document.querySelector("#ferramentas-sistema");
+  document.querySelector("#abrir-sobre-dev").addEventListener("click", () => {
+    document.querySelector("#sobre-dev").showModal();
+  });
   const demo = /(?:^\?|&)demo=1(?:&|$)/.test(window.location?.search ?? "");
   let dados;
   let tela = "painel";

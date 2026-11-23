@@ -68,6 +68,24 @@
     <button id="tentar-gravar" class="botao secundario" type="button" hidden>Tentar gravar novamente</button>
     <section id="conteudo"></section>
   </main>
+  <footer class="rodape-app">
+    <div class="rodape-interno">
+      <p>Desenvolvido por <strong>Victor Ladislau Viana</strong></p>
+      <nav aria-label="Sobre o projeto">
+        <a href="https://www.linkedin.com/in/victor-ladislau-14402a170/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <button class="link-rodape" type="button" id="abrir-sobre-dev" aria-haspopup="dialog">Sobre o desenvolvedor</button>
+      </nav>
+    </div>
+  </footer>
+  <dialog id="sobre-dev" aria-labelledby="nome-dev">
+    <span class="avatar-dev" aria-hidden="true">VV</span>
+    <h2 id="nome-dev">Victor Ladislau Viana</h2>
+    <p>Desenvolvedor do Flora em Folha, ferramenta de gestão de projetos e propostas para paisagistas.</p>
+    <form method="dialog" class="acoes">
+      <a class="botao secundario" href="https://www.linkedin.com/in/victor-ladislau-14402a170/" target="_blank" rel="noopener noreferrer">Ver perfil no LinkedIn</a>
+      <button class="botao secundario" autofocus>Fechar</button>
+    </form>
+  </dialog>
   <dialog id="prever-backup" aria-labelledby="titulo-backup">
     <h2 id="titulo-backup">Restaurar backup</h2>
     <p id="resumo-backup"></p>

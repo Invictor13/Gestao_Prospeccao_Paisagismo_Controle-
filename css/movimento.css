@@ -5,9 +5,10 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 92% 5%, #d9ebcf 0%, transparent 43%),
-    repeating-radial-gradient(ellipse at 109% -10%, transparent 0 38px, #49745015 39px 40px, transparent 41px 56px);
-  mask-image: linear-gradient(110deg, transparent 32%, #000 86%);
+    radial-gradient(ellipse at 91% 8%, #d2e7c8 0%, transparent 46%),
+    radial-gradient(ellipse at 10% 95%, #dbe9d4 0%, transparent 44%),
+    repeating-radial-gradient(ellipse at 109% -10%, transparent 0 39px, #49745021 39px 40px, transparent 41px 54px);
+  mask-image: linear-gradient(112deg, #0003 6%, #000 88%);
 }
 .preferencia-fundo { display: flex; align-items: center; gap: 7px; padding: 6px 12px; font-size: .875rem; }
 .preferencia-fundo input { width: auto; accent-color: #cce6b9; }
@@ -16,7 +17,15 @@ body::before {
   .fundo-animado::before { animation: luz-do-fundo 16s ease-in-out infinite alternate; }
   .entrada-tela { animation: entrada-tela 170ms ease-out; }
   #status:not([hidden]) { animation: entrada-tela 160ms ease-out; }
-  .botao { transition: background-color 150ms ease, border-color 150ms ease; }
+  .botao, .barra-app button, .barra-app summary, .editor {
+    transition: background-color var(--transicao), border-color var(--transicao), box-shadow var(--transicao);
+  }
+  @media (hover: hover) {
+    .botao:hover { box-shadow: 0 3px 9px #123c2e25; }
+    .editor:hover { background-color: #f6f9f4; }
+    details.cartao { transition: border-color var(--transicao), box-shadow var(--transicao); }
+    details.cartao:hover { border-color: #b1c8b3; box-shadow: var(--sombra-elevada); }
+  }
 }
 @keyframes luz-do-fundo {
   from { opacity: .45; }

@@ -17,6 +17,7 @@ Paisagismo.resumirPainel = (salvos, hoje, pendente) => {
     aprovadas: registros.filter(({ acompanhamento }) => acompanhamento.situacao === "Aprovada").length,
     potencial: abertas.reduce((total, { projeto, hora }) => total + Paisagismo.calcular(projeto, hora).preco, 0),
     retornos,
+    recentes: registros.sort((a, b) => Date.parse(b.data) - Date.parse(a.data)).slice(0, 4),
     funil: Paisagismo.comercial.situacoes.map((situacao) =>
       [situacao, registros.filter((item) => item.acompanhamento.situacao === situacao).length]),
   };

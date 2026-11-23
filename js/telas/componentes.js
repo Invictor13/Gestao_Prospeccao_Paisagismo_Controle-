@@ -1,6 +1,7 @@
 Paisagismo.ui = (() => {
   const reais = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
   const numeros = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 6 });
+  const animacoesValor = new WeakMap();
 
   function elemento(tag, texto, classe) {
     const item = document.createElement(tag);
@@ -36,6 +37,16 @@ Paisagismo.ui = (() => {
     const resultado = elemento(tag, valor);
     bloco.append(elemento("span", rotulo), resultado);
     return { bloco, resultado };
+  }
+
+  function mostrarValor(campo, valor) {
+    if (campo.textContent === valor) return;
+    if (campo.textContent && window.matchMedia?.("(prefers-reduced-motion: no-preference)").matches) {
+      animacoesValor.get(campo)?.cancel();
+      const animacao = campo.animate?.([{ opacity: .65 }, { opacity: 1 }], { duration: 200, easing: "ease-out" });
+      if (animacao) animacoesValor.set(campo, animacao);
+    }
+    campo.textContent = valor;
   }
 
   function entrada(rotulo, valor, atualizar, minimo, tag = "input", maximo) {
@@ -135,10 +146,12 @@ Paisagismo.ui = (() => {
         remover.title = "Remover item";
         remover.setAttribute("aria-label", "Remover item " + (indice + 1));
         const nome = elemento("div", undefined, "nome-item");
+        const rotuloDetalhes = elemento("summary", "Detalhes de " + (item[0] || "item"));
         nome.dataset.valor = item[0];
         const texto = entrada("Nome do item " + (indice + 1), item[0], (valor) => {
           if (!editar(0, valor)) return false;
           nome.dataset.valor = valor;
+          rotuloDetalhes.textContent = "Detalhes de " + (valor || "item");
           return true;
         }, undefined, "textarea");
         texto.rows = 1;
@@ -148,7 +161,7 @@ Paisagismo.ui = (() => {
         if (opcoes.tipo || opcoes.ordenar) {
           const detalhes = elemento("details", undefined, "detalhes-item");
           const extras = elemento("div", undefined, "formulario-comercial");
-          detalhes.append(elemento("summary", "Detalhes de " + (item[0] || "item")), extras);
+          detalhes.append(rotuloDetalhes, extras);
           if (opcoes.tipo === "despesa") {
             subtotal = elemento("output");
             atualizarSubtotal();
@@ -197,8 +210,10 @@ Paisagismo.ui = (() => {
     const cabecalho = elemento("div", undefined, "editor editor-cabecalho");
     cabecalho.setAttribute("aria-hidden", "true");
     cabecalho.append(...colunas.map((rotulo) => elemento("span", rotulo)));
+    const controles = elemento("div", undefined, "editor-controles");
+    controles.append(topo, cabecalho);
     const bloco = elemento("section", undefined, "cartao");
-    bloco.append(topo, cabecalho, lista);
+    bloco.append(controles, lista);
     return bloco;
   }
 
@@ -218,6 +233,6 @@ Paisagismo.ui = (() => {
     };
   }
 
-  return { elemento, botao, cabecalho, cartao, linha, campo, editor, editar,
+  return { elemento, botao, cabecalho, cartao, linha, campo, editor, editar, mostrarValor,
     brl: (valor) => reais.format(valor), numero: (valor) => numeros.format(valor) };
 })();

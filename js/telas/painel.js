@@ -2,10 +2,17 @@ Paisagismo.telaPainel = (ctx) => {
   const ui = Paisagismo.ui;
   const hoje = Paisagismo.comercial.hoje();
   const painel = Paisagismo.resumirPainel(ctx.dados.salvos, hoje, ctx.versaoPendente);
-  const indicadores = ui.elemento("div", undefined, "indicadores-painel");
-  const valor = ui.cartao("Valor em aberto", ui.elemento("strong", ui.brl(painel.potencial), "valor-indicador"),
-    ui.elemento("p", "Soma das propostas planejadas e enviadas"));
-  valor.classList.add("indicador-principal");
+  const acoes = ui.elemento("div", undefined, "acoes");
+  acoes.append(ui.botao("Abrir orçamento", () => ctx.navegar("orcamento")),
+    ui.botao("Ver modelos de serviço", () => ctx.navegar("modelos"), true));
+  const topo = ui.cabecalho("Visão geral", "Acompanhe propostas e retornos de cada projeto.", acoes);
+  topo.classList.add("topo-painel");
+  const valor = ui.elemento("section", undefined, "indicador-principal");
+  valor.append(ui.elemento("h2", "Valor em aberto"),
+    ui.elemento("strong", ui.brl(painel.potencial), "valor-indicador valor-financeiro"),
+    ui.elemento("p", "Propostas planejadas e enviadas"));
+  const destaque = ui.elemento("div", undefined, "destaque-painel");
+  destaque.append(topo, valor);
   const contagens = ui.elemento("section", undefined, "cartao indicadores-secundarios");
   contagens.setAttribute("aria-label", "Indicadores comerciais");
   for (const [rotulo, valor] of [
@@ -17,7 +24,6 @@ Paisagismo.telaPainel = (ctx) => {
     indicador.append(ui.elemento("h2", rotulo), ui.elemento("strong", valor, "valor-indicador"));
     contagens.append(indicador);
   }
-  indicadores.append(valor, contagens);
   const total = painel.funil.reduce((soma, [, quantidade]) => soma + quantidade, 0);
   const funil = painel.funil.map(([situacao, quantidade]) => {
     const linha = ui.elemento("div", undefined, "funil-linha");
@@ -44,7 +50,21 @@ Paisagismo.telaPainel = (ctx) => {
     ui.botao("Ver agenda", () => ctx.navegar("retornos"), true));
   area.append(contatos, ui.cartao("Situação das propostas", ...funil));
   const painelCompleto = ui.elemento("div", undefined, "pilha");
-  painelCompleto.append(indicadores, area);
-  return [ui.cabecalho("Visão geral", "Acompanhe propostas e retornos de cada projeto.",
-    ui.botao("Abrir orçamento", () => ctx.navegar("orcamento"))), painelCompleto];
+  painelCompleto.append(destaque, contagens, area);
+  if (painel.recentes.length) {
+    const recentes = painel.recentes.map((item) => {
+      const registro = ui.elemento("div", undefined, "linha");
+      const detalhes = ui.elemento("div");
+      const situacao = item.acompanhamento.situacao;
+      const etiqueta = ui.elemento("span", situacao, "status-proposta");
+      etiqueta.dataset.situacao = situacao;
+      detalhes.append(ui.elemento("strong", item.projeto.nome),
+        ui.elemento("p", [item.clienteNome, ui.brl(Paisagismo.calcular(item.projeto, item.hora).preco)]
+          .filter(Boolean).join(" · ")), etiqueta);
+      registro.append(detalhes, ui.botao("Ver proposta no histórico", () => ctx.abrir(ctx.dados.salvos.indexOf(item)), true));
+      return registro;
+    });
+    painelCompleto.append(ui.cartao("Propostas recentes", ...recentes));
+  }
+  return [painelCompleto];
 };

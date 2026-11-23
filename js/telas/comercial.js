@@ -86,7 +86,11 @@ Paisagismo.telasComerciais = (() => {
       lista.firstElementChild.querySelector("input").focus();
     });
     exibir();
-    return [ui.cabecalho("Clientes", "Guarde os contatos de quem contrata seus projetos.", adicionar), lista];
+    const painel = ui.cabecalho("Clientes", "Guarde os contatos de quem contrata seus projetos.", adicionar);
+    if (!ctx.dados.clientes.length) {
+      lista.firstElementChild.classList.add("estado-vazio");
+    }
+    return [painel, lista];
   }
 
   function modelos(ctx) {
@@ -155,6 +159,14 @@ Paisagismo.telasComerciais = (() => {
     const pendentes = ctx.dados.salvos.map((item, indice) => ({ item, indice }))
       .filter(({ item: { acompanhamento: a } }) => a.proximo && !["Aprovada", "Recusada"].includes(a.situacao))
       .sort((a, b) => a.item.acompanhamento.proximo.localeCompare(b.item.acompanhamento.proximo));
+    const topo = ui.cabecalho("Próximos contatos", "Acompanhe os retornos registrados nas propostas.");
+    if (!pendentes.length) {
+      const vazio = ui.cartao("Nenhum retorno agendado",
+        ui.elemento("p", "Abra um orçamento salvo e informe a data do próximo contato no acompanhamento comercial."),
+        ui.botao("Ver orçamentos salvos", () => ctx.navegar("historico"), true));
+      vazio.classList.add("estado-vazio");
+      return [topo, vazio];
+    }
     const grupos = [["Atrasados", (dia) => dia < hoje], ["Hoje", (dia) => dia === hoje],
       ["Agendados", (dia) => dia > hoje]];
     const lista = ui.elemento("div", undefined, "pilha");
@@ -169,7 +181,7 @@ Paisagismo.telasComerciais = (() => {
       });
       lista.append(ui.cartao(titulo, ...linhas.length ? linhas : [ui.elemento("p", "Nenhum retorno nesta faixa.")]));
     }
-    return [ui.cabecalho("Próximos contatos", "Acompanhe os retornos registrados nas propostas."), lista];
+    return [topo, lista];
   }
 
   return { seletor, rotular, dadosProjeto, clientes, modelos, acompanhamento, realizadas, retornos };

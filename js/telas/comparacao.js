@@ -36,6 +36,11 @@ Paisagismo.telaComparacao = (ctx, referencia) => {
   cabecalho.append(titulos);
   const corpo = ui.elemento("tbody");
   tabela.append(cabecalho, corpo);
+  const rolagem = ui.elemento("div", undefined, "rolagem-comparacao");
+  rolagem.tabIndex = 0;
+  rolagem.setAttribute("role", "region");
+  rolagem.setAttribute("aria-label", "Tabela de comparação");
+  rolagem.append(tabela);
   const mudancas = ui.elemento("div");
   const horas = (valor) => ui.numero(valor) + " h";
   const indicadores = [
@@ -103,6 +108,6 @@ Paisagismo.telaComparacao = (ctx, referencia) => {
   cenario.select.addEventListener("change", exibir);
   exibir();
   const paineis = ui.elemento("div", undefined, "pilha");
-  paineis.append(ui.cartao("Cenários selecionados", seletores, tabela), ui.cartao("Alterações na composição", mudancas));
+  paineis.append(ui.cartao("Cenários selecionados", seletores, rolagem), ui.cartao("Alterações na composição", mudancas));
   return [topo, paineis];
 };

@@ -3,7 +3,7 @@ Paisagismo.telasOrcamento = (() => {
   const data = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
 
   function resumo(projeto, hora) {
-    const preco = ui.elemento("strong");
+    const preco = ui.elemento("strong", undefined, "valor-financeiro");
     const destaque = ui.cartao("Preço final do projeto", preco);
     destaque.classList.add("preco");
     const campos = [
@@ -12,18 +12,15 @@ Paisagismo.telasOrcamento = (() => {
       ["base", "Valor sem impostos"], ["impostos", "Impostos"],
       ["custo", "Custo total do projeto"], ["lucro", "Lucro do projeto"],
       ["desconto", "Desconto comercial"],
-    ].map(([chave, rotulo]) => ({ chave, ...ui.linha(rotulo) }));
-    let realce;
+    ].map(([chave, rotulo]) => {
+      const linha = ui.linha(rotulo);
+      if (chave === "custo") linha.bloco.classList.add("linha-total");
+      if (["impostos", "lucro", "desconto"].includes(chave)) linha.bloco.classList.add("linha-" + chave);
+      return { chave, ...linha };
+    });
     function exibir() {
       const valores = Paisagismo.calcular(projeto, hora);
-      const novoPreco = ui.brl(valores.preco);
-      if (preco.textContent && preco.textContent !== novoPreco
-        && window.matchMedia?.("(prefers-reduced-motion: no-preference)").matches) {
-        realce?.cancel();
-        realce = destaque.animate?.([{ backgroundColor: "#c2dfab" }, { backgroundColor: "#dcebc9" }],
-          { duration: 300, easing: "ease-out" });
-      }
-      preco.textContent = novoPreco;
+      ui.mostrarValor(preco, ui.brl(valores.preco));
       for (const { chave, resultado } of campos) {
         resultado.value = chave === "horas" ? ui.numero(valores.horas) + " h" : ui.brl(valores[chave]);
       }
@@ -76,7 +73,7 @@ Paisagismo.telasOrcamento = (() => {
       ui.campo(margem ? "Margem antes do desconto (%)" : "Acréscimo de lucro sobre o custo (%)", projeto.lucro,
         ui.editar(projeto, "lucro", atualizar)),
       ui.campo("Desconto sobre o preço calculado (%)", projeto.desconto, ui.editar(projeto, "desconto", atualizar), 0, 100));
-    const comercial = ui.elemento("details", undefined, "cartao");
+    const comercial = ui.elemento("details", undefined, "cartao painel-expansivel");
     comercial.append(ui.elemento("summary", "Cliente, escopo e condições"),
       Paisagismo.telasComerciais.dadosProjeto(ctx, atualizar));
     esquerda.append(ui.cartao("Dados e percentuais", parametros),
@@ -94,7 +91,7 @@ Paisagismo.telasOrcamento = (() => {
       const vazio = ui.cartao("Nenhum orçamento salvo",
         ui.elemento("p", "Salve um projeto para consultar seu preço e os valores usados no cálculo."),
         ui.botao("Ir para orçamento", () => ctx.navegar("orcamento"), true));
-      vazio.classList.add("historico-vazio");
+      vazio.classList.add("historico-vazio", "estado-vazio");
       return [ui.cabecalho("Orçamentos salvos", "Consulte as versões registradas de cada proposta."), vazio];
     }
     const comercial = Paisagismo.telasComerciais;
