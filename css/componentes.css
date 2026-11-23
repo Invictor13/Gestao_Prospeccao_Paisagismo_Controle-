@@ -1,0 +1,102 @@
+.sidebar { position: sticky; top: 0; align-self: start; min-height: 100vh; display: flex; flex-direction: column; gap: 24px; background: #17392c; color: #f5faf2; padding: 22px 14px; }
+.marca { display: flex; align-items: center; gap: 12px; padding: 0 8px; }
+.marca-icone { display: grid; place-items: center; flex: 0 0 36px; height: 36px; background: #dcebc4; color: #17392c; border-radius: 9px; font: 1.35rem Georgia, serif; }
+.marca small, .backup small { display: block; color: #c2d7c7; margin-top: 4px; }
+.sidebar button { text-align: left; border: 0; border-radius: 8px; color: inherit; background: transparent; padding: 10px 12px; width: 100%; font-size: .94rem; }
+.sidebar button:hover, .sidebar [aria-current] { background: #325746; }
+.sidebar [aria-current] { font-weight: 700; }
+.backup { margin-top: auto; border-top: 1px solid #608170; padding-top: 12px; }
+.backup small { padding: 8px 12px 0; }
+.cabecalho { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 18px; }
+.cabecalho p { color: var(--suave); margin-top: 4px; }
+.grade { display: grid; grid-template-columns: minmax(0, 1fr) minmax(235px, 340px); gap: 16px; align-items: start; }
+.pilha { display: grid; gap: 16px; min-width: 0; }
+.resumo { position: sticky; top: 16px; }
+.cartao { background: #fff; border: 1px solid var(--borda); border-radius: 12px; padding: clamp(12px, 1.5vw, 20px); min-width: 0; }
+.cartao h2 { margin-bottom: 10px; }
+.preco { background: #dcebc9; border-color: #c9dfb1; }
+.preco strong { display: block; font: clamp(1.85rem, 3vw, 2.5rem) Georgia, serif; overflow-wrap: anywhere; }
+.linha { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--borda); }
+.linha:last-child { border-bottom: 0; }
+.linha > * { min-width: 0; overflow-wrap: anywhere; }
+.linha output, .linha > strong { text-align: right; font-variant-numeric: tabular-nums; }
+.linha input[type="number"] { width: 112px; text-align: right; }
+.campo { display: grid; gap: 6px; }
+.campo + .campo { margin-top: 14px; }
+input, textarea { border: 1px solid #a9bbad; border-radius: 6px; color: inherit; background: #fff; padding: 6px 8px; min-width: 0; width: 100%; }
+input:invalid { border-color: #b34738; }
+.editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(66px, 6.5rem) 2.25rem; align-items: start; gap: 8px; }
+.editor + .editor { margin-top: 6px; }
+.editor input { text-align: right; font-variant-numeric: tabular-nums; }
+.editor-cabecalho { color: var(--suave); font-size: .875rem; font-weight: 600; margin-bottom: 6px; }
+.editor-cabecalho span:nth-child(2) { text-align: right; }
+.editor-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.editor-topo h2 { margin: 0; }
+.lista-itens { padding: 3px; }
+.nome-item { display: grid; min-width: 0; }
+.nome-item::after, .nome-item textarea { grid-area: 1 / 1; padding: 6px 8px; border: 1px solid transparent; line-height: 1.3; }
+.nome-item::after { content: attr(data-valor) " "; white-space: pre-wrap; overflow-wrap: anywhere; visibility: hidden; }
+.nome-item textarea { resize: none; overflow: hidden; border-color: #a9bbad; }
+.botao { background: var(--verde); color: #fff; border: 1px solid var(--verde); border-radius: 8px; padding: 9px 13px; font-weight: 600; }
+.botao:hover { background: #163c2b; }
+.secundario { background: #fff; color: var(--verde); border-color: #a9bbad; }
+.secundario:hover { background: #eaf1e6; }
+.adicionar { padding: 5px 9px; font-size: .875rem; }
+.remover { padding: 0; width: 2.25rem; min-height: 2.12rem; font-size: 1.25rem; font-weight: 400; background: transparent; border-color: transparent; color: var(--suave); }
+.parametros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+.parametros .campo { margin: 0; align-content: end; }
+.parametros .campo:first-child { grid-column: 1 / -1; }
+.historico-vazio { max-width: 560px; }
+.historico-vazio .botao { margin-top: 12px; }
+.seletores-comparacao { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.seletores-comparacao .campo { margin: 0; min-width: 0; }
+.seletores-comparacao select {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid #a9bbad;
+  border-radius: 6px;
+  color: inherit;
+  background: #fff;
+  font: inherit;
+}
+.tabela-comparacao { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 16px; }
+.tabela-comparacao th, .tabela-comparacao td {
+  padding: 9px 6px;
+  border-bottom: 1px solid var(--borda);
+  text-align: right;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.tabela-comparacao th:first-child { text-align: left; }
+.tabela-comparacao tbody tr:last-child { background: #e4eedb; font-weight: 700; }
+@media (max-width: 550px) {
+  .seletores-comparacao { grid-template-columns: 1fr; }
+  .tabela-comparacao { font-size: .875rem; }
+  .tabela-comparacao th, .tabela-comparacao td { padding-inline: 4px; }
+}
+@media (min-width: 961px) and (min-height: 600px) {
+  .grade-cadastro .lista-itens { max-height: calc(100dvh - 13rem); overflow-y: auto; }
+}
+.acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+#status { background: #fff; border: 1px solid var(--borda); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; }
+.sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 960px) {
+  .grade { grid-template-columns: 1fr; }
+  .resumo { position: static; }
+  .resumo-operacao { grid-row: 1; }
+  .grade-orcamento > .pilha { display: contents; }
+  .grade-orcamento .preco { grid-row: 1; }
+}
+@media (max-width: 760px) {
+  .sidebar { position: static; min-height: auto; gap: 10px; padding: 12px; }
+  .sidebar nav, .backup { display: flex; flex-wrap: wrap; gap: 4px; }
+  .sidebar button { width: auto; }
+}
+@media (max-width: 420px) {
+  .editor { grid-template-columns: minmax(0, 1fr) 64px 2.25rem; gap: 5px; }
+  .parametros { grid-template-columns: 1fr; }
+}
+@media (max-height: 540px) {
+  .sidebar, .resumo { position: static; }
+}

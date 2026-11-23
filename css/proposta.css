@@ -1,0 +1,47 @@
+.marca { justify-content: center; }
+.marca img { display: block; width: min(100%, 166px); height: auto; border-radius: 12px; }
+.logo-flora { clip-path: inset(13% round 12%); }
+.formulario-comercial { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.formulario-comercial .campo { margin: 0; min-width: 0; }
+.formulario-comercial label:has(textarea) { grid-column: 1 / -1; }
+.formulario-comercial + .botao, details > .botao, details > .cartao { margin-top: 12px; }
+details > summary { font-size: 1.05rem; font-weight: 650; cursor: pointer; }
+details[open] > summary { margin-bottom: 12px; }
+select { min-width: 0; width: 100%; padding: 6px 8px; font: inherit; color: inherit; background: white; border: 1px solid #a9bbad; border-radius: 6px; }
+.filtros-historico { margin-bottom: 12px; }
+.filtros-historico .campo { margin: 0; }
+.proposta { max-width: 800px; margin-inline: auto; background: white; padding: clamp(16px, 4vw, 44px); border: 1px solid var(--borda); border-radius: 14px; }
+.proposta-cabecalho { border-bottom: 2px solid var(--verde); padding-bottom: 14px; }
+.proposta-logo { display: block; margin-bottom: 10px; border-radius: 10px; }
+.proposta-dados { display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; }
+.proposta-dados dt { font-weight: 650; }
+.proposta-dados dd { margin: 0; overflow-wrap: anywhere; }
+.proposta .cartao { margin-top: 12px; }
+.proposta p, .proposta li { white-space: pre-wrap; overflow-wrap: anywhere; }
+.proposta-valor strong { font: 2rem Georgia, serif; }
+.detalhes-item { grid-column: 1 / -1; font-size: .875rem; }
+.detalhes-item > summary { font-size: .875rem; font-weight: 500; }
+.detalhes-item .campo { margin: 0; }
+.detalhes-item input[type="checkbox"] { width: auto; }
+.entrada-numerica { text-align: right; font-variant-numeric: tabular-nums; }
+.entrada-numerica[aria-invalid="true"] { outline: 2px solid #b34738; outline-offset: 1px; }
+#prever-backup { width: min(calc(100% - 32px), 500px); border: 1px solid var(--borda); border-radius: 12px; color: inherit; padding: 22px; }
+#prever-backup p, #prever-backup form { margin-block: 12px; }
+#prever-backup::backdrop { background: #142e24a6; }
+.lista-itens .editor { border-bottom: 1px solid var(--borda); padding-block: 3px 6px; }
+.listas-compactas .editor + .editor { margin-top: 1px; }
+.listas-compactas .lista-itens .editor { padding-block: 2px; }
+.listas-compactas .lista-itens input, .listas-compactas .nome-item textarea,
+.listas-compactas .nome-item::after { padding-block: 3px; }
+@media (max-width: 760px) { .marca img { width: 84px; } .marca { justify-content: start; } }
+@media (max-width: 520px) { .formulario-comercial { grid-template-columns: 1fr; } }
+@media print {
+  @page { margin: 14mm; }
+  body:has(.proposta) { display: block; background: white; }
+  body:has(.proposta)::before, body:has(.proposta) .sidebar,
+  body:has(.proposta) #status, body:has(.proposta) .cabecalho { display: none !important; }
+  body:has(.proposta) main, .proposta { padding: 0; margin: 0; max-width: none; border: 0; }
+  .entrada-tela { animation: none !important; }
+  .proposta h2 { break-after: avoid; }
+  .proposta-cabecalho, .proposta-valor { break-inside: avoid; }
+}
