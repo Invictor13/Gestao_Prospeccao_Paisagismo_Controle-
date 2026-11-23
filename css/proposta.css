@@ -1,5 +1,3 @@
-.marca { justify-content: center; }
-.marca img { display: block; width: min(100%, 166px); height: auto; border-radius: 12px; }
 .logo-flora { clip-path: inset(13% round 12%); }
 .formulario-comercial { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .formulario-comercial .campo { margin: 0; min-width: 0; }
@@ -34,12 +32,11 @@ select { min-width: 0; width: 100%; padding: 6px 8px; font: inherit; color: inhe
 .listas-compactas .lista-itens .editor { padding-block: 2px; }
 .listas-compactas .lista-itens input, .listas-compactas .nome-item textarea,
 .listas-compactas .nome-item::after { padding-block: 3px; }
-@media (max-width: 760px) { .marca img { width: 84px; } .marca { justify-content: start; } }
 @media (max-width: 520px) { .formulario-comercial { grid-template-columns: 1fr; } }
 @media print {
   @page { margin: 14mm; }
   body:has(.proposta) { display: block; background: white; }
-  body:has(.proposta)::before, body:has(.proposta) .sidebar,
+  body:has(.proposta)::before, body:has(.proposta) .barra-app,
   body:has(.proposta) #status, body:has(.proposta) .cabecalho { display: none !important; }
   body:has(.proposta) main, .proposta { padding: 0; margin: 0; max-width: none; border: 0; }
   .entrada-tela { animation: none !important; }

@@ -1,12 +1,3 @@
-.sidebar { position: sticky; top: 0; align-self: start; min-height: 100vh; display: flex; flex-direction: column; gap: 24px; background: #17392c; color: #f5faf2; padding: 22px 14px; }
-.marca { display: flex; align-items: center; gap: 12px; padding: 0 8px; }
-.marca-icone { display: grid; place-items: center; flex: 0 0 36px; height: 36px; background: #dcebc4; color: #17392c; border-radius: 9px; font: 1.35rem Georgia, serif; }
-.marca small, .backup small { display: block; color: #c2d7c7; margin-top: 4px; }
-.sidebar button { text-align: left; border: 0; border-radius: 8px; color: inherit; background: transparent; padding: 10px 12px; width: 100%; font-size: .94rem; }
-.sidebar button:hover, .sidebar [aria-current] { background: #325746; }
-.sidebar [aria-current] { font-weight: 700; }
-.backup { margin-top: auto; border-top: 1px solid #608170; padding-top: 12px; }
-.backup small { padding: 8px 12px 0; }
 .cabecalho { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 18px; }
 .cabecalho p { color: var(--suave); margin-top: 4px; }
 .grade { display: grid; grid-template-columns: minmax(0, 1fr) minmax(235px, 340px); gap: 16px; align-items: start; }
@@ -20,6 +11,9 @@
 .linha:last-child { border-bottom: 0; }
 .linha > * { min-width: 0; overflow-wrap: anywhere; }
 .linha output, .linha > strong { text-align: right; font-variant-numeric: tabular-nums; }
+.linha:has(> output, > strong) { flex-wrap: wrap; column-gap: 12px; row-gap: 3px; }
+.linha:has(> output, > strong) > span { flex: 1 1 6rem; }
+.linha > output, .linha > strong { flex: 0 0 auto; max-width: 100%; margin-inline-start: auto; }
 .linha input[type="number"] { width: 112px; text-align: right; }
 .campo { display: grid; gap: 6px; }
 .campo + .campo { margin-top: 14px; }
@@ -89,15 +83,10 @@ input:invalid { border-color: #b34738; }
   .grade-orcamento > .pilha { display: contents; }
   .grade-orcamento .preco { grid-row: 1; }
 }
-@media (max-width: 760px) {
-  .sidebar { position: static; min-height: auto; gap: 10px; padding: 12px; }
-  .sidebar nav, .backup { display: flex; flex-wrap: wrap; gap: 4px; }
-  .sidebar button { width: auto; }
-}
 @media (max-width: 420px) {
-  .editor { grid-template-columns: minmax(0, 1fr) 64px 2.25rem; gap: 5px; }
+  .editor { grid-template-columns: minmax(0, 1fr) clamp(72px, 26vw, 96px) 2.25rem; gap: 5px; }
   .parametros { grid-template-columns: 1fr; }
 }
 @media (max-height: 540px) {
-  .sidebar, .resumo { position: static; }
+  .resumo { position: static; }
 }

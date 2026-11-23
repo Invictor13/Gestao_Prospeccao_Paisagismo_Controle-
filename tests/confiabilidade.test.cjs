@@ -214,7 +214,7 @@ test("menu compacto fecha ao navegar e transfere o foco ao título", () => {
   assert.equal(titulo.textContent, "Orçamentos salvos");
   assert.equal(titulo.focado, true);
   menu.eventos.click();
-  controles.get(".sidebar").eventos.keydown({ key: "Escape" });
+  controles.get(".barra-app").eventos.keydown({ key: "Escape" });
   assert.equal(menu.getAttribute("aria-expanded"), "false");
   assert.equal(menu.focado, true);
 });

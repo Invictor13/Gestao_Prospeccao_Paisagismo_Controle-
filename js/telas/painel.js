@@ -3,15 +3,31 @@ Paisagismo.telaPainel = (ctx) => {
   const hoje = Paisagismo.comercial.hoje();
   const painel = Paisagismo.resumirPainel(ctx.dados.salvos, hoje, ctx.versaoPendente);
   const indicadores = ui.elemento("div", undefined, "indicadores-painel");
+  const valor = ui.cartao("Valor em aberto", ui.elemento("strong", ui.brl(painel.potencial), "valor-indicador"),
+    ui.elemento("p", "Soma das propostas planejadas e enviadas"));
+  valor.classList.add("indicador-principal");
+  const contagens = ui.elemento("section", undefined, "cartao indicadores-secundarios");
+  contagens.setAttribute("aria-label", "Indicadores comerciais");
   for (const [rotulo, valor] of [
     ["Propostas em aberto", ui.numero(painel.abertas)],
     ["Retornos até hoje", ui.numero(painel.aRetomar)],
     ["Propostas aprovadas", ui.numero(painel.aprovadas)],
-    ["Valor em aberto", ui.brl(painel.potencial)],
   ]) {
-    indicadores.append(ui.cartao(rotulo, ui.elemento("strong", valor, "valor-indicador")));
+    const indicador = ui.elemento("div");
+    indicador.append(ui.elemento("h2", rotulo), ui.elemento("strong", valor, "valor-indicador"));
+    contagens.append(indicador);
   }
-  const funil = painel.funil.map(([situacao, quantidade]) => ui.linha(situacao, String(quantidade), "strong").bloco);
+  indicadores.append(valor, contagens);
+  const total = painel.funil.reduce((soma, [, quantidade]) => soma + quantidade, 0);
+  const funil = painel.funil.map(([situacao, quantidade]) => {
+    const linha = ui.elemento("div", undefined, "funil-linha");
+    const barra = ui.elemento("meter");
+    barra.max = Math.max(1, total);
+    barra.value = quantidade;
+    barra.setAttribute("aria-hidden", "true");
+    linha.append(ui.linha(situacao, ui.numero(quantidade), "strong").bloco, barra);
+    return linha;
+  });
   const retornos = painel.retornos.slice(0, 5).map((item) => {
     const linha = ui.elemento("div", undefined, "linha");
     const detalhes = ui.elemento("div");
@@ -23,12 +39,12 @@ Paisagismo.telaPainel = (ctx) => {
     return linha;
   });
   if (!retornos.length) retornos.push(ui.elemento("p", "Nenhum próximo contato nas propostas em aberto."));
-  const area = ui.elemento("div", undefined, "grade");
+  const area = ui.elemento("div", undefined, "painel-detalhes");
   const contatos = ui.cartao("Próximos contatos", ...retornos,
     ui.botao("Ver agenda", () => ctx.navegar("retornos"), true));
   area.append(contatos, ui.cartao("Situação das propostas", ...funil));
   const painelCompleto = ui.elemento("div", undefined, "pilha");
   painelCompleto.append(indicadores, area);
-  return [ui.cabecalho("Visão geral", "Indicadores pela versão mais recente gravada de cada projeto.",
+  return [ui.cabecalho("Visão geral", "Acompanhe propostas e retornos de cada projeto.",
     ui.botao("Abrir orçamento", () => ctx.navegar("orcamento"))), painelCompleto];
 };

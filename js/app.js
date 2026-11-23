@@ -8,6 +8,7 @@
   const previaBackup = document.querySelector("#prever-backup");
   const tentarGravar = document.querySelector("#tentar-gravar");
   const menu = document.querySelector("#menu-mobile");
+  const ferramentas = document.querySelector("#ferramentas-sistema");
   const demo = /(?:^\?|&)demo=1(?:&|$)/.test(window.location?.search ?? "");
   let dados;
   let tela = "painel";
@@ -19,8 +20,12 @@
     menu.setAttribute("aria-expanded", String(aberto));
   }
   menu.addEventListener("click", () => menuAberto(menu.getAttribute("aria-expanded") !== "true"));
-  document.querySelector(".sidebar").addEventListener("keydown", (evento) => {
-    if (evento.key === "Escape" && menu.getAttribute("aria-expanded") === "true") {
+  document.querySelector(".barra-app").addEventListener("keydown", (evento) => {
+    if (evento.key !== "Escape") return;
+    if (ferramentas.open) {
+      ferramentas.open = false;
+      ferramentas.querySelector("summary").focus();
+    } else if (menu.getAttribute("aria-expanded") === "true") {
       menuAberto(false);
       menu.focus();
     }
@@ -176,6 +181,7 @@
   for (const botao of navegacao) botao.addEventListener("click", () => {
     const aberto = menu.getAttribute("aria-expanded") === "true";
     menuAberto(false);
+    ferramentas.open = false;
     navegar(botao.dataset.tela);
     if (aberto) {
       const titulo = conteudo.querySelector("h1");
