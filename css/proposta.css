@@ -19,6 +19,7 @@ select { min-width: 0; width: 100%; padding: 6px 8px; font: inherit; color: inhe
 .proposta .cartao { margin-top: 12px; }
 .proposta p, .proposta li { white-space: pre-wrap; overflow-wrap: anywhere; }
 .proposta-valor strong { font: 2rem Georgia, serif; }
+.proposta-demonstracao { color: var(--suave); font-weight: 650; }
 .detalhes-item { grid-column: 1 / -1; font-size: .875rem; }
 .detalhes-item > summary { font-size: .875rem; font-weight: 500; }
 .detalhes-item .campo { margin: 0; }
@@ -42,6 +43,11 @@ select { min-width: 0; width: 100%; padding: 6px 8px; font: inherit; color: inhe
   body:has(.proposta) #status, body:has(.proposta) .cabecalho { display: none !important; }
   body:has(.proposta) main, .proposta { padding: 0; margin: 0; max-width: none; border: 0; }
   .entrada-tela { animation: none !important; }
+  .proposta { font-size: 11pt; color: #182d22; }
+  .proposta h1 { font-size: 24pt; }
+  .proposta .cartao { padding: 0; border: 0; margin-block: 6mm 0; }
+  .proposta dl, .proposta li { break-inside: avoid; }
+  .proposta p, .proposta li { orphans: 3; widows: 3; }
   .proposta h2 { break-after: avoid; }
   .proposta-cabecalho, .proposta-valor { break-inside: avoid; }
 }

@@ -11,6 +11,7 @@ Paisagismo.telaProposta = (ctx, item) => {
   const titulo = ui.elemento("header", undefined, "proposta-cabecalho");
   titulo.append(logo, ui.elemento("h1", projeto.tituloProposta || "Proposta de paisagismo"),
     ui.elemento("p", projeto.nome));
+  if (ctx.demonstracao) titulo.append(ui.elemento("p", "Exemplo demonstrativo · dados fictícios", "proposta-demonstracao"));
   proposta.append(titulo);
 
   const dados = ui.elemento("dl", undefined, "proposta-dados");

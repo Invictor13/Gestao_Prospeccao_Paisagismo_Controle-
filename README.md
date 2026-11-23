@@ -15,6 +15,10 @@ Gestão offline de clientes, orçamentos e propostas de paisagismo.
 
 O sistema grava as alterações no armazenamento do navegador quando disponível. Exporte um backup antes de mudar de navegador ou mover a pasta.
 
+A **Visão geral** usa a versão gravada mais recente de cada projeto. Propostas em aberto incluem versões planejadas e enviadas. O valor em aberto soma os preços finais dessas versões.
+
+Use **Abrir demonstração** no menu para testar com dados fictícios em outra aba. A demonstração não acessa o armazenamento local, desativa importação e exportação de backups e descarta alterações ao recarregar.
+
 Se o navegador recusar a gravação de um orçamento, a versão aparece como **Gravação pendente** no histórico. Use **Tentar gravar novamente** para persistir a mesma versão ou exporte um backup antes de fechar a página. A restauração só substitui os dados da sessão depois que o backup validado for gravado.
 
 ## Testes

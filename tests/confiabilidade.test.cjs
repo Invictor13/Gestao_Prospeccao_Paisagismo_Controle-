@@ -8,8 +8,11 @@ function abrirAplicacao(interfaceSimulada) {
   let conteudo = null;
   const disco = {
     falhar: false,
-    getItem: () => conteudo,
+    leituras: 0,
+    gravacoes: 0,
+    getItem() { this.leituras++; return conteudo; },
     setItem(chave, valor) {
+      this.gravacoes++;
       if (this.falhar) throw new Error("QuotaExceededError");
       conteudo = valor;
     },
@@ -33,7 +36,10 @@ function elementoSimulado(tag) {
     replaceChildren(...filhos) { this.children = filhos; },
     addEventListener(nome, acao) { this.eventos[nome] = acao; },
     setAttribute(nome, valor) { this.atributos[nome] = valor; },
+    getAttribute(nome) { return this.atributos[nome] ?? null; },
     removeAttribute(nome) { delete this.atributos[nome]; },
+    querySelector(tag) { return [...elementos(this)].find((filho) => filho.tag === tag); },
+    focus() { this.focado = true; },
   };
 }
 
@@ -42,7 +48,7 @@ function* elementos(raiz) {
   for (const filho of raiz.children) yield* elementos(filho);
 }
 
-test("a interface sinaliza a pendência e confirma somente após a nova tentativa", () => {
+function simularInterface() {
   const controles = new Map();
   const historico = elementoSimulado("button");
   historico.dataset.tela = "historico";
@@ -55,8 +61,14 @@ test("a interface sinaliza a pendência e confirma somente após a nova tentativ
     },
     querySelectorAll: () => [historico],
   };
-  const { p, disco } = abrirAplicacao({ document, structuredClone, scrollTo() {} });
   const naTela = (filtrar) => [...elementos(controles.get("#conteudo"))].find(filtrar);
+  return { document, controles, historico, naTela };
+}
+
+test("a interface sinaliza a pendência e confirma somente após a nova tentativa", () => {
+  const { document, controles, historico, naTela } = simularInterface();
+  const { p, disco } = abrirAplicacao({ document, structuredClone, scrollTo() {} });
+  naTela((elemento) => elemento.textContent === "Abrir orçamento").eventos.click();
   const nome = naTela((elemento) => elemento.atributos["aria-label"] === "Nome do projeto");
   nome.value = "Jardim em teste";
   nome.eventos.input();
@@ -152,4 +164,77 @@ test("o exemplo inicial continua exibindo R$ 3.052,81", () => {
   const valores = p.calcular(modelo.projeto, p.custos(modelo.operacao).hora);
   assert.equal(valores.horas, 55);
   assert.equal(p.ui.brl(valores.preco).replace(/\s/g, " "), "R$ 3.052,81");
+});
+
+test("painel conta apenas a versão vigente gravada de cada projeto", () => {
+  const { p } = abrirAplicacao();
+  const dados = p.armazenamento.carregar();
+  function registro(id, data, situacao, proximo = "") {
+    return { ...versao({ ...dados.projeto, idProjeto: id }, 20), data,
+      acompanhamento: { situacao, proximo } };
+  }
+  const antiga = registro("jardim", "2025-01-01", "Enviada", "2025-01-01");
+  const vigente = registro("jardim", "2025-01-02", "Aprovada");
+  const aberta = registro("patio", "2025-01-02", "Enviada", "2025-01-03");
+  const pendente = registro("patio", "2025-01-04", "Aprovada");
+  const painel = p.resumirPainel([pendente, antiga, aberta, vigente], "2025-01-03", pendente);
+  assert.equal(painel.abertas, 1);
+  assert.equal(painel.aprovadas, 1);
+  assert.equal(painel.aRetomar, 1);
+  assert.equal(painel.retornos[0], aberta);
+  assert.equal(painel.potencial, p.calcular(aberta.projeto, aberta.hora).preco);
+});
+
+test("a demonstração fica em memória e não lê nem grava os dados locais", () => {
+  const { document, controles, naTela } = simularInterface();
+  const { disco } = abrirAplicacao({ document, structuredClone, location: { search: "?demo=1" }, scrollTo() {} });
+  assert.equal(controles.get("#aviso-demonstracao").hidden, false);
+  assert.equal(controles.get("#importar").hidden, true);
+  assert.equal(controles.get("#exportar").hidden, true);
+  assert.ok(naTela((elemento) => elemento.textContent.includes("Cliente fictício A")));
+  naTela((elemento) => elemento.textContent === "Abrir orçamento").eventos.click();
+  const nome = naTela((elemento) => elemento.atributos["aria-label"] === "Nome do projeto");
+  nome.value = "Teste na demo";
+  nome.eventos.input();
+  naTela((elemento) => elemento.textContent === "Salvar orçamento").eventos.click();
+  assert.match(controles.get("#status").textContent, /na demonstração/);
+  assert.equal(disco.leituras, 0);
+  assert.equal(disco.gravacoes, 0);
+});
+
+test("menu compacto fecha ao navegar e transfere o foco ao título", () => {
+  const { document, controles, historico, naTela } = simularInterface();
+  abrirAplicacao({ document, structuredClone, scrollTo() {} });
+  const menu = controles.get("#menu-mobile");
+  menu.eventos.click();
+  assert.equal(menu.getAttribute("aria-expanded"), "true");
+  historico.eventos.click();
+  assert.equal(menu.getAttribute("aria-expanded"), "false");
+  const titulo = naTela((elemento) => elemento.tag === "h1");
+  assert.equal(titulo.textContent, "Orçamentos salvos");
+  assert.equal(titulo.focado, true);
+  menu.eventos.click();
+  controles.get(".sidebar").eventos.keydown({ key: "Escape" });
+  assert.equal(menu.getAttribute("aria-expanded"), "false");
+  assert.equal(menu.focado, true);
+});
+
+test("a prévia inclui todo o escopo de uma proposta longa e só os dados públicos", () => {
+  const { document } = simularInterface();
+  const { p } = abrirAplicacao({ document, structuredClone, scrollTo() {} });
+  for (const quantidade of [1, 100]) {
+    const projeto = p.armazenamento.carregar().projeto;
+    projeto.nome = "Projeto de teste";
+    projeto.notas = "Informação interna";
+    projeto.escopo = "Levantamento e detalhamento do jardim. ".repeat(quantidade);
+    projeto.etapa = Array.from({ length: quantidade }, (_, i) => ["Entregável " + i, 1, "", "", true]);
+    projeto.etapa.push(["Atividade interna", 1]);
+    const item = { ...versao(projeto, 20), clienteNome: "Cliente fictício", acompanhamento: { emitida: "" } };
+    const [, documento] = p.telaProposta({ demonstracao: true }, item);
+    const conteudo = [...elementos(documento)];
+    assert.equal(conteudo.filter((elemento) => elemento.tag === "li").length, quantidade);
+    assert.ok(conteudo.some((elemento) => elemento.textContent === projeto.escopo));
+    assert.ok(conteudo.every((elemento) => !/Informação interna|Atividade interna/.test(elemento.textContent)));
+    assert.ok(conteudo.some((elemento) => elemento.textContent.includes("dados fictícios")));
+  }
 });
