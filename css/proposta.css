@@ -1,31 +1,73 @@
-.logo-flora { clip-path: inset(13% round 12%); }
+.logo-flora { clip-path: inset(8% round 14%); }
 .formulario-comercial { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .formulario-comercial .campo { margin: 0; min-width: 0; }
 .formulario-comercial label:has(textarea) { grid-column: 1 / -1; }
 .formulario-comercial + .botao, details > .botao, details > .cartao { margin-top: 12px; }
-details > summary { font-size: 1.05rem; font-weight: 650; cursor: pointer; }
-details[open] > summary { margin-bottom: 12px; }
-select { min-width: 0; width: 100%; padding: 6px 8px; font: inherit; color: inherit; background: white; border: 1px solid #a9bbad; border-radius: 6px; }
-.filtros-historico { margin-bottom: 12px; }
+details > summary {
+  font-size: 1.02rem;
+  font-weight: 650;
+  cursor: pointer;
+  list-style-position: outside;
+  color: var(--floresta);
+}
+details[open] > summary {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--borda);
+}
+select {
+  min-width: 0;
+  width: 100%;
+  padding: 7px 9px;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #9eb5a5;
+  border-radius: var(--raio-curto);
+}
+.filtros-historico {
+  margin-bottom: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--marfim);
+  border: 1px solid var(--borda);
+}
 .filtros-historico .campo { margin: 0; }
-.proposta { max-width: 800px; margin-inline: auto; background: white; padding: clamp(16px, 4vw, 44px); border: 1px solid var(--borda); border-radius: 14px; }
-.proposta-cabecalho { border-bottom: 2px solid var(--verde); padding-bottom: 14px; }
+.proposta {
+  max-width: 820px;
+  margin-inline: auto;
+  background: #fff;
+  padding: clamp(18px, 4vw, 46px);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  box-shadow: var(--sombra);
+}
+.proposta-cabecalho { border-bottom: 2px solid var(--folhagem); padding-bottom: 14px; }
 .proposta-logo { display: block; margin-bottom: 10px; border-radius: 10px; }
-.proposta-dados { display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; }
-.proposta-dados dt { font-weight: 650; }
+.proposta-dados { display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; margin-top: 14px; }
+.proposta-dados dt { font-weight: 650; color: var(--floresta); }
 .proposta-dados dd { margin: 0; overflow-wrap: anywhere; }
-.proposta .cartao { margin-top: 12px; }
+.proposta .cartao { margin-top: 14px; }
 .proposta p, .proposta li { white-space: pre-wrap; overflow-wrap: anywhere; }
-.proposta-valor strong { font: 2rem Georgia, serif; }
+.proposta-valor { background: var(--marfim); border-color: var(--salvia); }
+.proposta-valor strong { font: 2.1rem Georgia, "Times New Roman", serif; color: var(--floresta); }
 .proposta-demonstracao { color: var(--suave); font-weight: 650; }
 .entrada-numerica { text-align: right; font-variant-numeric: tabular-nums; }
 .entrada-numerica[aria-invalid="true"] { outline: 2px solid #b34738; outline-offset: 1px; }
-#prever-backup { width: min(calc(100% - 32px), 500px); border: 1px solid var(--borda); border-radius: 12px; color: inherit; padding: 22px; }
+#prever-backup {
+  width: min(calc(100% - 32px), 500px);
+  border: 1px solid var(--salvia);
+  border-radius: 14px;
+  color: inherit;
+  background: var(--papel);
+  padding: 24px;
+  box-shadow: 0 24px 48px #153c3033;
+}
 #prever-backup p, #prever-backup form { margin-block: 12px; }
-#prever-backup::backdrop { background: #142e24a6; }
-.lista-itens .editor { border-bottom: 1px solid var(--borda); padding-block: 3px 6px; }
-.listas-compactas .editor + .editor { margin-top: 1px; }
-.listas-compactas .lista-itens .editor { padding-block: 2px; }
+#prever-backup::backdrop { background: #142e24a6; backdrop-filter: blur(2px); }
+.lista-itens .editor { border-bottom: 1px solid var(--borda); padding-block: 5px 7px; }
+.listas-compactas .editor + .editor { margin-top: 2px; }
+.listas-compactas .lista-itens .editor { padding-block: 3px; }
 .listas-compactas .lista-itens input, .listas-compactas .nome-item textarea,
 .listas-compactas .nome-item::after { padding-block: 3px; }
 @media (max-width: 520px) { .formulario-comercial { grid-template-columns: 1fr; } }
@@ -34,11 +76,11 @@ select { min-width: 0; width: 100%; padding: 6px 8px; font: inherit; color: inhe
   body:has(.proposta) { display: block; background: white; }
   body:has(.proposta)::before, body:has(.proposta) .barra-app,
   body:has(.proposta) #status, body:has(.proposta) .cabecalho { display: none !important; }
-  body:has(.proposta) main, .proposta { padding: 0; margin: 0; max-width: none; border: 0; }
+  body:has(.proposta) main, .proposta { padding: 0; margin: 0; max-width: none; border: 0; box-shadow: none; }
   .entrada-tela { animation: none !important; }
   .proposta { font-size: 11pt; color: #182d22; }
   .proposta h1 { font-size: 24pt; }
-  .proposta .cartao { padding: 0; border: 0; margin-block: 6mm 0; }
+  .proposta .cartao { padding: 0; border: 0; margin-block: 6mm 0; box-shadow: none; background: transparent; }
   .proposta dl, .proposta li { break-inside: avoid; }
   .proposta p, .proposta li { orphans: 3; widows: 3; }
   .proposta h2 { break-after: avoid; }
