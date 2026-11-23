@@ -127,6 +127,7 @@
     }
     const pagina = document.createElement("div");
     pagina.className = "entrada-tela";
+    if (["historico", "clientes", "retornos"].includes(destino)) pagina.classList.add("tela-centralizada");
     pagina.append(...telas[destino](ctx, item));
     conteudo.replaceChildren(pagina);
     window.scrollTo(0, 0);

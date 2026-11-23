@@ -219,6 +219,28 @@ test("menu compacto fecha ao navegar e transfere o foco ao título", () => {
   assert.equal(menu.focado, true);
 });
 
+test("paginação conserva a posição dos itens e volta após remover a última linha", () => {
+  const { document } = simularInterface();
+  const { p } = abrirAplicacao({ document, structuredClone, scrollTo() {} });
+  const lista = Array.from({ length: 21 }, (_, indice) => "Item " + (indice + 1));
+  let visiveis;
+  const paginas = p.ui.paginador(8, (inicio, fim) => { visiveis = lista.slice(inicio, fim); }, "Itens");
+  const [anterior, legenda, proxima] = paginas.controles.children;
+  paginas.atualizar(lista.length);
+  assert.equal(anterior.disabled, true);
+  assert.deepEqual(visiveis, lista.slice(0, 8));
+  proxima.eventos.click();
+  assert.deepEqual(visiveis, lista.slice(8, 16));
+  paginas.mostrar(lista.length, 20);
+  assert.equal(paginas.paginaDe(20), 4);
+  assert.equal(proxima.disabled, true);
+  assert.match(legenda.textContent, /^3 de 3/);
+  lista.splice(16);
+  paginas.atualizar(lista.length);
+  assert.match(legenda.textContent, /^2 de 2/);
+  assert.deepEqual(visiveis, lista.slice(8));
+});
+
 test("a prévia inclui todo o escopo de uma proposta longa e só os dados públicos", () => {
   const { document } = simularInterface();
   const { p } = abrirAplicacao({ document, structuredClone, scrollTo() {} });

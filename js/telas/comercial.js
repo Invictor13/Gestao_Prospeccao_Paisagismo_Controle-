@@ -39,25 +39,45 @@ Paisagismo.telasComerciais = (() => {
     const projeto = ctx.dados.projeto;
     const grade = ui.elemento("div", undefined, "formulario-comercial");
     const opcoes = [["", "Selecione um cliente"], ...ctx.dados.clientes.map((c) => [c.id, c.nome])];
-    grade.append(rotular("Cliente", seletor("Cliente", opcoes, projeto.cliente, ui.editar(projeto, "cliente", atualizar))),
-      campo("Tipo de serviço", projeto, "tipo", atualizar),
-      campo("Local do projeto", projeto, "local", atualizar),
-      campo("Área estimada (m²)", projeto, "area", atualizar),
-      campo("Escopo", projeto, "escopo", atualizar, "longo"),
-      campo("Exclusões", projeto, "exclusoes", atualizar, "longo"),
-      campo("Prazo previsto", projeto, "prazo", atualizar),
-      campo("Validade da proposta", projeto, "validade", atualizar, "date"),
-      campo("Título da proposta", projeto, "tituloProposta", atualizar),
-      campo("Condições de pagamento", projeto, "pagamento", atualizar, "longo"),
-      campo("Observações internas", projeto, "notas", atualizar, "longo"));
-    return ui.cartao("Dados comerciais", grade, ui.botao("Gerenciar clientes", () => ctx.navegar("clientes"), true));
+    const grupos = [
+      ["Projeto", [
+        rotular("Cliente", seletor("Cliente", opcoes, projeto.cliente, ui.editar(projeto, "cliente", atualizar))),
+        campo("Tipo de serviço", projeto, "tipo", atualizar),
+        campo("Local do projeto", projeto, "local", atualizar),
+        campo("Área estimada (m²)", projeto, "area", atualizar),
+        ui.botao("Gerenciar clientes", () => ctx.navegar("clientes"), true),
+      ]],
+      ["Proposta", [
+        campo("Título da proposta", projeto, "tituloProposta", atualizar),
+        campo("Validade da proposta", projeto, "validade", atualizar, "date"),
+        campo("Prazo previsto", projeto, "prazo", atualizar),
+        campo("Escopo", projeto, "escopo", atualizar, "longo"),
+        campo("Exclusões", projeto, "exclusoes", atualizar, "longo"),
+      ]],
+      ["Condições", [
+        campo("Condições de pagamento", projeto, "pagamento", atualizar, "longo"),
+        campo("Observações internas", projeto, "notas", atualizar, "longo"),
+      ]],
+    ];
+    const seletorGrupo = ui.elemento("div", undefined, "acoes grupos-comerciais");
+    const botoes = grupos.map(([rotulo], indice) => ui.botao(rotulo, () => exibir(indice), true));
+    function exibir(indice) {
+      for (const [posicao, botao] of botoes.entries()) botao.setAttribute("aria-pressed", String(posicao === indice));
+      grade.replaceChildren(...grupos[indice][1]);
+    }
+    seletorGrupo.append(...botoes);
+    const painel = ui.elemento("div", undefined, "pilha");
+    painel.append(seletorGrupo, grade);
+    exibir(0);
+    return painel;
   }
 
   function clientes(ctx) {
     const lista = ui.elemento("div", undefined, "pilha");
+    const paginas = ui.paginador(5, exibir, "Páginas de clientes");
     const atualizar = ctx.aoAlterar(() => {});
-    function exibir() {
-      lista.replaceChildren(...ctx.dados.clientes.map((cliente) => {
+    function exibir(inicio, fim) {
+      lista.replaceChildren(...ctx.dados.clientes.slice(inicio, fim).map((cliente) => {
         const detalhes = ui.elemento("details", undefined, "cartao");
         const titulo = ui.elemento("summary", cliente.nome || "Novo cliente");
         const grade = ui.elemento("div", undefined, "formulario-comercial");
@@ -81,45 +101,60 @@ Paisagismo.telasComerciais = (() => {
       cliente.id = regras.id();
       ctx.dados.clientes.unshift(cliente);
       ctx.gravar("Cliente cadastrado.");
-      exibir();
+      paginas.atualizar(ctx.dados.clientes.length, 0);
       lista.firstElementChild.open = true;
       lista.firstElementChild.querySelector("input").focus();
     });
-    exibir();
+    paginas.atualizar(ctx.dados.clientes.length);
     const painel = ui.cabecalho("Clientes", "Guarde os contatos de quem contrata seus projetos.", adicionar);
     if (!ctx.dados.clientes.length) {
       lista.firstElementChild.classList.add("estado-vazio");
     }
-    return [painel, lista];
+    return [painel, lista, paginas.controles];
   }
 
   function modelos(ctx) {
-    const lista = ui.elemento("div", undefined, "pilha");
+    const area = ui.elemento("div", undefined, "pilha tela-modelos");
+    const lista = ui.elemento("div", undefined, "catalogo-modelos");
     const atualizar = ctx.aoAlterar(() => {});
-    function exibir() {
-      lista.replaceChildren(...ctx.dados.modelos.map((modelo) => {
-        const detalhes = ui.elemento("details", undefined, "cartao");
-        const titulo = ui.elemento("summary", modelo.nome || "Modelo sem nome");
-        const nome = campo("Nome do modelo", modelo, "nome", () => {
-          if (!atualizar()) return false;
-          titulo.textContent = modelo.nome || "Modelo sem nome";
-          return true;
-        });
-        const aplicar = ui.botao("Aplicar ao rascunho", () => ctx.aplicarModelo(modelo));
-        detalhes.append(titulo, nome, ui.editor("Etapas do modelo", "Horas", modelo.etapas, atualizar,
-          ["Etapa", "Horas"], { ordenar: true }), aplicar);
-        return detalhes;
+    const paginas = ui.paginador(window.matchMedia?.("(max-width: 690px)").matches ? 3 : 6, (inicio, fim) => {
+      lista.replaceChildren(...ctx.dados.modelos.slice(inicio, fim).map((modelo, indice) => {
+        const resumo = ui.elemento("p", modelo.etapas.length + " etapas · "
+          + ui.numero(Paisagismo.horasProjeto(modelo.etapas)) + " h");
+        const botao = ui.botao("Editar modelo", () => editarModelo(modelo, inicio + indice), true);
+        return ui.cartao(modelo.nome || "Modelo sem nome", resumo, botao);
       }));
+    }, "Páginas de modelos");
+    function editarModelo(modelo, indice) {
+      const voltar = ui.botao("Voltar aos modelos", () => {
+        exibir(indice);
+        lista.children[paginas.paginaDe(indice)].querySelector("button").focus();
+      }, true);
+      const acoes = ui.elemento("div", undefined, "acoes");
+      acoes.append(voltar, ui.botao("Aplicar ao rascunho", () => ctx.aplicarModelo(modelo)));
+      const editor = ui.editor("Etapas do modelo (h)", "Horas", modelo.etapas, atualizar,
+        ["Etapa", "Horas"], { ordenar: true, colunas: true,
+          porPagina: window.matchMedia?.("(max-width: 690px)").matches ? 2
+            : window.matchMedia?.("(max-height: 650px)").matches ? 4 : 8 });
+      const grade = ui.elemento("div", undefined, "grade-modelo");
+      grade.append(ui.cartao("Identificação", campo("Nome do modelo", modelo, "nome", atualizar)), editor);
+      area.replaceChildren(ui.cabecalho("Editar modelo", "Ajuste as etapas antes de aplicar ao rascunho.", acoes), grade);
+      voltar.focus();
+    }
+    function exibir(indice = 0) {
+      paginas.mostrar(ctx.dados.modelos.length, indice);
+      area.replaceChildren(topo, lista, paginas.controles);
     }
     const criar = ui.botao("Criar a partir do rascunho", () => {
-      ctx.dados.modelos.unshift({ nome: ctx.dados.projeto.nome || "Novo modelo",
-        etapas: ctx.dados.projeto.etapa.map(([nome, horas]) => [nome, horas]) });
+      const modelo = { nome: ctx.dados.projeto.nome || "Novo modelo",
+        etapas: ctx.dados.projeto.etapa.map(([nome, horas]) => [nome, horas]) };
+      ctx.dados.modelos.unshift(modelo);
       ctx.gravar("Modelo criado.");
-      exibir();
-      lista.firstElementChild.open = true;
+      editarModelo(modelo, 0);
     });
+    const topo = ui.cabecalho("Modelos de serviço", "Reutilize uma estimativa inicial de etapas e horas.", criar);
     exibir();
-    return [ui.cabecalho("Modelos de serviço", "Reutilize uma estimativa inicial de etapas e horas.", criar), lista];
+    return [area];
   }
 
   function acompanhamento(ctx, item) {
@@ -169,19 +204,23 @@ Paisagismo.telasComerciais = (() => {
     }
     const grupos = [["Atrasados", (dia) => dia < hoje], ["Hoje", (dia) => dia === hoje],
       ["Agendados", (dia) => dia > hoje]];
-    const lista = ui.elemento("div", undefined, "pilha");
-    for (const [titulo, pertence] of grupos) {
-      const linhas = pendentes.filter(({ item }) => pertence(item.acompanhamento.proximo)).map(({ item, indice }) => {
-        const linha = ui.elemento("div", undefined, "linha");
-        const texto = ui.elemento("div");
-        texto.append(ui.elemento("strong", [item.clienteNome, item.projeto.nome].filter(Boolean).join(" · ")),
-          ui.elemento("p", regras.formatarData(item.acompanhamento.proximo) + " · " + (item.acompanhamento.acao || "Retomar contato")));
-        linha.append(texto, ui.botao("Abrir", () => ctx.abrir(indice), true));
-        return linha;
-      });
-      lista.append(ui.cartao(titulo, ...linhas.length ? linhas : [ui.elemento("p", "Nenhum retorno nesta faixa.")]));
-    }
-    return [topo, lista];
+    const lista = ui.elemento("div", undefined, "pilha agenda-grupos");
+    const paginas = ui.paginador(6, (inicio, fim) => {
+      const visiveis = pendentes.slice(inicio, fim);
+      lista.replaceChildren(...grupos.map(([titulo, pertence]) => {
+        const linhas = visiveis.filter(({ item }) => pertence(item.acompanhamento.proximo)).map(({ item, indice }) => {
+          const linha = ui.elemento("div", undefined, "linha");
+          const texto = ui.elemento("div");
+          texto.append(ui.elemento("strong", [item.clienteNome, item.projeto.nome].filter(Boolean).join(" · ")),
+            ui.elemento("p", regras.formatarData(item.acompanhamento.proximo) + " · " + (item.acompanhamento.acao || "Retomar contato")));
+          linha.append(texto, ui.botao("Abrir", () => ctx.abrir(indice), true));
+          return linha;
+        });
+        return ui.cartao(titulo, ...(linhas.length ? linhas : [ui.elemento("p", "Nenhum retorno nesta página.")]));
+      }));
+    }, "Páginas de próximos contatos");
+    paginas.atualizar(pendentes.length);
+    return [topo, lista, paginas.controles];
   }
 
   return { seletor, rotular, dadosProjeto, clientes, modelos, acompanhamento, realizadas, retornos };

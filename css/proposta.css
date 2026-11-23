@@ -18,10 +18,6 @@ select { min-width: 0; width: 100%; padding: 6px 8px; font: inherit; color: inhe
 .proposta p, .proposta li { white-space: pre-wrap; overflow-wrap: anywhere; }
 .proposta-valor strong { font: 2rem Georgia, serif; }
 .proposta-demonstracao { color: var(--suave); font-weight: 650; }
-.detalhes-item { grid-column: 1 / -1; font-size: .875rem; }
-.detalhes-item > summary { font-size: .875rem; font-weight: 500; }
-.detalhes-item .campo { margin: 0; }
-.detalhes-item input[type="checkbox"] { width: auto; }
 .entrada-numerica { text-align: right; font-variant-numeric: tabular-nums; }
 .entrada-numerica[aria-invalid="true"] { outline: 2px solid #b34738; outline-offset: 1px; }
 #prever-backup { width: min(calc(100% - 32px), 500px); border: 1px solid var(--borda); border-radius: 12px; color: inherit; padding: 22px; }

@@ -8,8 +8,9 @@ Paisagismo.telaEtapas = (ctx) => {
   const grade = ui.elemento("div", undefined, "grade grade-cadastro");
   const resumo = ui.cartao("Horas estimadas", total);
   resumo.classList.add("preco", "resumo", "resumo-operacao");
-  grade.append(ui.editor("Atividades e durações", "Horas estimadas", etapas, ctx.aoAlterar(exibir),
-    ["Atividade", "Horas"], { tipo: "etapa", ordenar: true }), resumo);
+  grade.append(ui.editor("Atividades e durações (h)", "Horas estimadas", etapas, ctx.aoAlterar(exibir),
+    ["Atividade", "Horas"], { tipo: "etapa", ordenar: true, colunas: true,
+      porPagina: window.matchMedia?.("(min-width: 1041px)").matches ? 14 : 8 }), resumo);
   exibir();
   return [ui.cabecalho("Etapas do projeto", "Estime o tempo de trabalho de cada atividade."), grade];
 };

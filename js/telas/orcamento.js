@@ -56,7 +56,7 @@ Paisagismo.telasOrcamento = (() => {
     });
     const novo = ui.botao("Novo orçamento", ctx.novo, true);
     const acoes = ui.elemento("div", undefined, "acoes");
-    acoes.append(novo, ui.botao("Usar modelo", () => ctx.navegar("modelos"), true), salvar);
+    acoes.append(novo, ui.botao("Usar modelo", () => ctx.navegar("modelos"), true), comparar, salvar);
     const esquerda = ui.elemento("div", undefined, "pilha");
     const parametros = ui.elemento("div", undefined, "parametros");
     const ferramentas = Paisagismo.telasComerciais;
@@ -73,14 +73,17 @@ Paisagismo.telasOrcamento = (() => {
       ui.campo(margem ? "Margem antes do desconto (%)" : "Acréscimo de lucro sobre o custo (%)", projeto.lucro,
         ui.editar(projeto, "lucro", atualizar)),
       ui.campo("Desconto sobre o preço calculado (%)", projeto.desconto, ui.editar(projeto, "desconto", atualizar), 0, 100));
-    const comercial = ui.elemento("details", undefined, "cartao painel-expansivel");
-    comercial.append(ui.elemento("summary", "Cliente, escopo e condições"),
-      Paisagismo.telasComerciais.dadosProjeto(ctx, atualizar));
-    esquerda.append(ui.cartao("Dados e percentuais", parametros),
-      comercial, ui.editor("Despesas diretas", "Valor unitário em reais", projeto.despesas, atualizar,
+    const comercial = ui.botao("Editar cliente, escopo e condições", () => {
+      ui.abrirDialogo(comercial, "Cliente, escopo e condições",
+        Paisagismo.telasComerciais.dadosProjeto(ctx, atualizar));
+    }, true);
+    const dados = ui.cartao("Dados e percentuais", parametros, comercial);
+    dados.classList.add("orcamento-dados");
+    esquerda.append(dados,
+      ui.editor("Despesas diretas (R$)", "Valor unitário em reais", projeto.despesas, atualizar,
         ["Despesa", "Unitário (R$)"], { tipo: "despesa" }));
     const direita = ui.elemento("div", undefined, "pilha resumo");
-    direita.append(resultado.destaque, resultado.memoria, comparar);
+    direita.append(resultado.destaque, resultado.memoria);
     const grade = ui.elemento("div", undefined, "grade grade-orcamento");
     grade.append(esquerda, direita);
     return [ui.cabecalho("Orçamento", "Calcule o preço de um projeto de paisagismo.", acoes), grade];
@@ -107,11 +110,16 @@ Paisagismo.telasOrcamento = (() => {
     filtros.append(comercial.rotular("Buscar cliente ou projeto", busca), comercial.rotular("Situação", situacao),
       comercial.rotular("Salvo a partir de", de), comercial.rotular("Salvo até", ate));
     const lista = ui.elemento("div");
+    let registros = [];
+    const paginas = ui.paginador(6, (inicio, fim) => {
+      lista.replaceChildren(...(registros.length ? registros.slice(inicio, fim)
+        : [ui.elemento("p", "Nenhum orçamento para estes filtros.")]));
+    }, "Páginas de orçamentos");
     const normalizar = (texto) => texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
     const diaLocal = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Sao_Paulo" });
     function exibir() {
       const termo = normalizar(busca.value.trim());
-      const registros = ctx.dados.salvos.flatMap((item, indice) => {
+      registros = ctx.dados.salvos.flatMap((item, indice) => {
         const dia = diaLocal.format(new Date(item.data));
         if (!normalizar(item.projeto.nome + " " + item.clienteNome).includes(termo)
           || (situacao.value && item.acompanhamento.situacao !== situacao.value)
@@ -126,13 +134,13 @@ Paisagismo.telasOrcamento = (() => {
         linha.append(detalhes, ui.botao("Abrir", () => ctx.abrir(indice), true));
         return [linha];
       });
-      lista.replaceChildren(...(registros.length ? registros : [ui.elemento("p", "Nenhum orçamento para estes filtros.")]));
+      paginas.atualizar(registros.length, 0);
     }
     for (const campo of [busca, de, ate]) campo.addEventListener("input", exibir);
     exibir();
     return [ui.cabecalho("Orçamentos salvos", "Consulte as versões registradas de cada proposta.",
       ui.botao("Comparar cenários", () => ctx.navegar("comparar"), true)),
-      ui.cartao("Histórico", filtros, lista)];
+      ui.cartao("Histórico", filtros, lista, paginas.controles)];
   }
 
   function salvo(ctx, item) {

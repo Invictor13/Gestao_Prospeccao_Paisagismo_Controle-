@@ -172,8 +172,6 @@
 @media (min-width: 1041px) and (min-height: 650px) {
   .barra-app { position: sticky; top: 0; z-index: 4; }
   .resumo { top: 118px; }
-  .grade-cadastro .editor-controles { position: sticky; top: 118px; z-index: 1; padding-block: 6px 2px; }
-  .grade-cadastro .lista-itens :is(input, textarea, button, summary) { scroll-margin-top: 205px; }
 }
 
 @media (max-width: 1040px) {

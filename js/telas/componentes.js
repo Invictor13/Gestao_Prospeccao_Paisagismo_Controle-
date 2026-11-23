@@ -92,23 +92,70 @@ Paisagismo.ui = (() => {
     return bloco;
   }
 
+  function abrirDialogo(ancora, titulo, conteudo) {
+    const modal = elemento("dialog", undefined, "dialogo-edicao");
+    modal.setAttribute("aria-label", titulo);
+    const form = elemento("form");
+    form.method = "dialog";
+    const fechar = elemento("button", "Fechar", "botao secundario");
+    fechar.autofocus = true;
+    form.append(fechar);
+    const topo = elemento("div", undefined, "dialogo-topo");
+    topo.append(elemento("h2", titulo), form);
+    modal.append(topo, conteudo);
+    modal.addEventListener("close", () => {
+      modal.remove();
+      ancora.focus();
+    });
+    ancora.parentElement.append(modal);
+    modal.showModal();
+    return modal;
+  }
+
+  function paginador(tamanho, exibir, rotulo) {
+    let pagina = 0;
+    let total = 0;
+    const legenda = elemento("span", undefined, "paginacao-legenda");
+    legenda.setAttribute("role", "status");
+    const anterior = botao("Anterior", () => atualizar(total, pagina - 1), true);
+    const proxima = botao("Próxima", () => atualizar(total, pagina + 1), true);
+    const controles = elemento("nav", undefined, "paginacao");
+    controles.setAttribute("aria-label", rotulo);
+    controles.append(anterior, legenda, proxima);
+    function atualizar(quantidade, destino = pagina) {
+      total = quantidade;
+      const paginas = Math.max(1, Math.ceil(total / tamanho));
+      pagina = Math.max(0, Math.min(destino, paginas - 1));
+      legenda.textContent = (pagina + 1) + " de " + paginas + " · " + total + (total === 1 ? " item" : " itens");
+      controles.hidden = paginas <= 1;
+      anterior.disabled = pagina === 0;
+      proxima.disabled = pagina === paginas - 1;
+      exibir(pagina * tamanho, (pagina + 1) * tamanho);
+    }
+    return { controles, atualizar, mostrar: (quantidade, indice) => atualizar(quantidade, Math.floor(indice / tamanho)),
+      paginaDe: (indice) => indice % tamanho };
+  }
+
   function editor(titulo, unidade, itens, atualizar, colunas, opcoes = {}) {
     const lista = elemento("div", undefined, "lista-itens");
+    lista.setAttribute("role", "group");
+    lista.setAttribute("aria-label", colunas.join(" · "));
+    const paginacao = paginador(opcoes.porPagina ?? 8, renderizar, "Páginas de " + titulo.toLowerCase());
     let removido;
     const desfazer = botao("Desfazer remoção", () => {
       const { indice, item } = removido;
       itens.splice(indice, 0, item);
       if (atualizar()) {
         desfazer.hidden = true;
-        renderizar();
-        lista.children[indice].querySelector("textarea").focus();
+        paginacao.mostrar(itens.length, indice);
+        lista.children[paginacao.paginaDe(indice)].querySelector("textarea").focus();
       } else itens.splice(indice, 1);
     }, true);
     desfazer.hidden = true;
     const adicionar = botao("+ Adicionar item", () => {
       itens.push(["Novo item", 0]);
       if (atualizar()) {
-        renderizar();
+        paginacao.mostrar(itens.length, itens.length - 1);
         const novo = lista.lastElementChild.querySelector("textarea");
         novo.focus();
         novo.select();
@@ -116,8 +163,9 @@ Paisagismo.ui = (() => {
     }, true);
     adicionar.classList.add("adicionar");
 
-    function renderizar() {
-      lista.replaceChildren(...itens.map((item, indice) => {
+    function renderizar(inicio, fim) {
+      lista.replaceChildren(...itens.slice(inicio, fim).map((item, local) => {
+        const indice = inicio + local;
         const grupo = elemento("div", undefined, "editor");
         let subtotal;
         const atualizarSubtotal = () => {
@@ -138,30 +186,37 @@ Paisagismo.ui = (() => {
           if (atualizar()) {
             removido = { indice, item };
             desfazer.hidden = false;
-            renderizar();
-            (lista.children[indice]?.querySelector("textarea") || adicionar).focus();
+            const proximo = Math.min(indice, itens.length - 1);
+            paginacao.mostrar(itens.length, proximo);
+            (lista.children[paginacao.paginaDe(proximo)]?.querySelector("textarea") || adicionar).focus();
           } else itens.splice(indice, 0, item);
         }, true);
         remover.classList.add("remover");
         remover.title = "Remover item";
         remover.setAttribute("aria-label", "Remover item " + (indice + 1));
         const nome = elemento("div", undefined, "nome-item");
-        const rotuloDetalhes = elemento("summary", "Detalhes de " + (item[0] || "item"));
+        const detalhes = botao("Detalhes", () => {
+          modal = abrirDialogo(detalhes, "Detalhes de " + (item[0] || "item"), extras);
+        }, true);
+        detalhes.classList.add("botao-detalhes-item");
+        const extras = elemento("div", undefined, "formulario-comercial detalhes-formulario");
+        let modal;
+        const nomeDetalhes = () => detalhes.setAttribute("aria-label", "Detalhes de " + (item[0] || "item " + (indice + 1)));
+        nomeDetalhes();
         nome.dataset.valor = item[0];
         const texto = entrada("Nome do item " + (indice + 1), item[0], (valor) => {
           if (!editar(0, valor)) return false;
           nome.dataset.valor = valor;
-          rotuloDetalhes.textContent = "Detalhes de " + (valor || "item");
+          nomeDetalhes();
           return true;
         }, undefined, "textarea");
         texto.rows = 1;
         nome.append(texto);
-        grupo.append(nome,
-          entrada(unidade + " do item " + (indice + 1), item[1], (v) => editar(1, v)), remover);
+        const acoesItem = elemento("div", undefined, "acoes-item");
+        if (opcoes.tipo || opcoes.ordenar) acoesItem.append(detalhes);
+        acoesItem.append(remover);
+        grupo.append(nome, entrada(unidade + " do item " + (indice + 1), item[1], (v) => editar(1, v)), acoesItem);
         if (opcoes.tipo || opcoes.ordenar) {
-          const detalhes = elemento("details", undefined, "detalhes-item");
-          const extras = elemento("div", undefined, "formulario-comercial");
-          detalhes.append(rotuloDetalhes, extras);
           if (opcoes.tipo === "despesa") {
             subtotal = elemento("output");
             atualizarSubtotal();
@@ -191,29 +246,25 @@ Paisagismo.ui = (() => {
                 [itens[indice], itens[destino]] = [itens[destino], itens[indice]];
                 return;
               }
-              renderizar();
-              lista.children[destino].querySelector("summary").focus();
+              modal.close();
+              paginacao.mostrar(itens.length, destino);
+              lista.children[paginacao.paginaDe(destino)].querySelector("textarea").focus();
             };
             if (indice > 0) extras.append(botao("Mover acima", () => mover(indice - 1), true));
             if (indice < itens.length - 1) extras.append(botao("Mover abaixo", () => mover(indice + 1), true));
           }
-          grupo.append(detalhes);
         }
         return grupo;
       }));
     }
-    renderizar();
+    paginacao.atualizar(itens.length);
     const topo = elemento("div", undefined, "editor-topo");
     const acoes = elemento("div", undefined, "acoes");
     acoes.append(desfazer, adicionar);
     topo.append(elemento("h2", titulo), acoes);
-    const cabecalho = elemento("div", undefined, "editor editor-cabecalho");
-    cabecalho.setAttribute("aria-hidden", "true");
-    cabecalho.append(...colunas.map((rotulo) => elemento("span", rotulo)));
-    const controles = elemento("div", undefined, "editor-controles");
-    controles.append(topo, cabecalho);
-    const bloco = elemento("section", undefined, "cartao");
-    bloco.append(controles, lista);
+    const bloco = elemento("section", undefined, "cartao cartao-editor");
+    if (opcoes.colunas) lista.classList.add("lista-dupla");
+    bloco.append(topo, lista, paginacao.controles);
     return bloco;
   }
 
@@ -233,6 +284,6 @@ Paisagismo.ui = (() => {
     };
   }
 
-  return { elemento, botao, cabecalho, cartao, linha, campo, editor, editar, mostrarValor,
+  return { elemento, botao, cabecalho, cartao, linha, campo, editor, editar, mostrarValor, paginador, abrirDialogo,
     brl: (valor) => reais.format(valor), numero: (valor) => numeros.format(valor) };
 })();

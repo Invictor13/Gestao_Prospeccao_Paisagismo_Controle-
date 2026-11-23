@@ -18,8 +18,10 @@ Paisagismo.telaCustos = (ctx) => {
   resumo.append(destaque, ui.cartao("Custo de operação",
       ui.campo("Horas mensais de referência", operacao.horas, ui.editar(operacao, "horas", atualizar), 0.01),
       mensal.bloco, anual.bloco));
-  grade.append(ui.editor("Despesas da operação", "Valor por período em reais", operacao.custos, atualizar,
-    ["Despesa", "Valor (R$)"], { tipo: "custo" }), resumo);
+  grade.append(ui.editor("Despesas da operação (R$)", "Valor por período em reais", operacao.custos, atualizar,
+    ["Despesa", "Valor (R$)"], { tipo: "custo", colunas: true,
+      porPagina: window.matchMedia?.("(min-width: 1041px) and (min-height: 900px)").matches
+        ? 22 : window.matchMedia?.("(min-width: 1041px)").matches ? 14 : 8 }), resumo);
   exibir();
   return [ui.cabecalho("Custos da operação", "Defina as despesas fixas e a base mensal de horas."), grade];
 };

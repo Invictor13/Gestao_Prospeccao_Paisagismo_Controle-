@@ -34,7 +34,7 @@ Paisagismo.telaPainel = (ctx) => {
     linha.append(ui.linha(situacao, ui.numero(quantidade), "strong").bloco, barra);
     return linha;
   });
-  const retornos = painel.retornos.slice(0, 5).map((item) => {
+  const retornos = painel.retornos.slice(0, 3).map((item) => {
     const linha = ui.elemento("div", undefined, "linha");
     const detalhes = ui.elemento("div");
     const dia = item.acompanhamento.proximo;
@@ -49,10 +49,12 @@ Paisagismo.telaPainel = (ctx) => {
   const contatos = ui.cartao("Próximos contatos", ...retornos,
     ui.botao("Ver agenda", () => ctx.navegar("retornos"), true));
   area.append(contatos, ui.cartao("Situação das propostas", ...funil));
-  const painelCompleto = ui.elemento("div", undefined, "pilha");
-  painelCompleto.append(destaque, contagens, area);
+  const painelCompleto = ui.elemento("div", undefined, "pilha painel-espaco");
+  const inicio = ui.elemento("div", undefined, "painel-inicio");
+  inicio.append(destaque, contagens);
+  painelCompleto.append(inicio, area);
   if (painel.recentes.length) {
-    const recentes = painel.recentes.map((item) => {
+    const recentes = painel.recentes.slice(0, 3).map((item) => {
       const registro = ui.elemento("div", undefined, "linha");
       const detalhes = ui.elemento("div");
       const situacao = item.acompanhamento.situacao;
@@ -61,10 +63,12 @@ Paisagismo.telaPainel = (ctx) => {
       detalhes.append(ui.elemento("strong", item.projeto.nome),
         ui.elemento("p", [item.clienteNome, ui.brl(Paisagismo.calcular(item.projeto, item.hora).preco)]
           .filter(Boolean).join(" · ")), etiqueta);
-      registro.append(detalhes, ui.botao("Ver proposta no histórico", () => ctx.abrir(ctx.dados.salvos.indexOf(item)), true));
+      const abrir = ui.botao("Abrir", () => ctx.abrir(ctx.dados.salvos.indexOf(item)), true);
+      abrir.setAttribute("aria-label", "Ver proposta no histórico: " + item.projeto.nome);
+      registro.append(detalhes, abrir);
       return registro;
     });
-    painelCompleto.append(ui.cartao("Propostas recentes", ...recentes));
+    area.append(ui.cartao("Propostas recentes", ...recentes));
   }
   return [painelCompleto];
 };
