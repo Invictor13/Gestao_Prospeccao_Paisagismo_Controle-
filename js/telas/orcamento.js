@@ -4,29 +4,104 @@ Paisagismo.telasOrcamento = (() => {
 
   function resumo(projeto, hora) {
     const preco = ui.elemento("strong", undefined, "valor-financeiro");
-    const destaque = ui.cartao("Preço final do projeto", preco);
+    const subtitulo = ui.elemento("div", undefined, "subtitulo-preco");
+    const resumoHoras = ui.elemento("span");
+    const badgeMargem = ui.elemento("span", undefined, "badge-margem");
+    subtitulo.append(resumoHoras, badgeMargem);
+    const aviso = ui.elemento("p",
+      "Atenção: o desconto comercial reduziu o preço final abaixo do custo total do projeto.",
+      "aviso-margem");
+    aviso.hidden = true;
+    const destaque = ui.cartao("Preço final do projeto", preco, subtitulo, aviso);
     destaque.classList.add("preco");
-    const campos = [
-      ["hora", "Custo por hora"], ["horas", "Horas de trabalho"],
-      ["minimo", "Valor mínimo viável"], ["despesas", "Despesas diretas"],
-      ["base", "Valor sem impostos"], ["impostos", "Impostos"],
-      ["custo", "Custo total do projeto"], ["lucro", "Lucro do projeto"],
-      ["desconto", "Desconto comercial"],
-    ].map(([chave, rotulo]) => {
-      const linha = ui.linha(rotulo);
+
+    const definicoes = [
+      ["hora", "Custo por hora", "Base operacional", "Custo mensal da operação dividido pelas horas mensais de referência."],
+      ["horas", "Horas de trabalho", "Base operacional", "Soma de todas as horas estimadas nas etapas do projeto."],
+      ["minimo", "Valor mínimo viável", "Base operacional", "Horas de trabalho multiplicadas pelo custo por hora da operação."],
+      ["despesas", "Despesas diretas", "Base operacional", "Soma de custos extras exclusivos deste projeto (quantidade × valor unitário)."],
+      ["base", "Valor sem impostos", "Tributos e custo", "Soma do valor mínimo viável com as despesas diretas."],
+      ["impostos", "Impostos", "Tributos e custo", "Aplicados sobre o valor sem impostos conforme o percentual informado."],
+      ["custo", "Custo total do projeto", "Tributos e custo", "Valor mínimo necessário para cobrir operação, despesas diretas e impostos."],
+      ["lucro", "Lucro do projeto", "Margem e resultado", "Calculado como acréscimo sobre o custo ou margem sobre o preço antes do desconto."],
+      ["desconto", "Desconto comercial", "Margem e resultado", "Redução aplicada sobre o preço calculado antes do desconto."],
+    ];
+    const grupos = new Map();
+    const campos = definicoes.map(([chave, rotulo, grupoNome, explicacao]) => {
+      const linha = ui.linha(rotulo, undefined, "output", explicacao);
       if (chave === "custo") linha.bloco.classList.add("linha-total");
       if (["impostos", "lucro", "desconto"].includes(chave)) linha.bloco.classList.add("linha-" + chave);
+      if (!grupos.has(grupoNome)) {
+        const secao = ui.elemento("div", undefined, "grupo-memoria");
+        secao.append(ui.elemento("span", grupoNome, "titulo-grupo-memoria"));
+        grupos.set(grupoNome, secao);
+      }
+      grupos.get(grupoNome).append(linha.bloco);
       return { chave, ...linha };
     });
+
+    const barraComposicao = ui.elemento("div", undefined, "barra-composicao");
+    const segCusto = ui.elemento("div", undefined, "segmento-composicao segmento-custo");
+    const segImpostos = ui.elemento("div", undefined, "segmento-composicao segmento-impostos");
+    const segLucro = ui.elemento("div", undefined, "segmento-composicao segmento-lucro");
+    barraComposicao.append(segCusto, segImpostos, segLucro);
+
+    const legenda = ui.elemento("div", undefined, "legenda-composicao");
+    const criarItemLegenda = (cor, texto) => {
+      const item = ui.elemento("span");
+      const ponto = ui.elemento("i");
+      ponto.setAttribute("style", "background:" + cor);
+      const rotulo = ui.elemento("small", texto);
+      item.append(ponto, rotulo);
+      return { item, rotulo };
+    };
+    const legCusto = criarItemLegenda("var(--salvia)", "Base");
+    const legImpostos = criarItemLegenda("#c59b5f", "Impostos");
+    const legLucro = criarItemLegenda("var(--folhagem)", "Lucro líquido");
+    legenda.append(legCusto.item, legImpostos.item, legLucro.item);
+
+    let inicializado = false;
     function exibir() {
       const valores = Paisagismo.calcular(projeto, hora);
+      const anterior = preco.textContent;
       ui.mostrarValor(preco, ui.brl(valores.preco));
+      if (inicializado && anterior !== preco.textContent) {
+        destaque.classList.add("preco-atualizado");
+      }
+      inicializado = true;
+
       for (const { chave, resultado } of campos) {
         resultado.value = chave === "horas" ? ui.numero(valores.horas) + " h" : ui.brl(valores[chave]);
       }
+
+      const lucroLiquido = valores.preco - valores.custo;
+      const margemEfetiva = valores.preco > 0 ? (lucroLiquido / valores.preco) * 100 : 0;
+      const abaixoDoCusto = valores.preco + 0.004 < valores.custo;
+      aviso.hidden = !abaixoDoCusto;
+      resumoHoras.textContent = ui.numero(valores.horas) + " h · " + ui.brl(valores.hora) + "/h";
+      badgeMargem.textContent = abaixoDoCusto
+        ? "Abaixo do custo"
+        : "Resultado líquido: " + ui.percentual(Math.max(0, margemEfetiva));
+      if (abaixoDoCusto) badgeMargem.dataset.alerta = "true";
+      else delete badgeMargem.dataset.alerta;
+
+      const somaPartes = Math.max(0.01, valores.base + valores.impostos + Math.max(0, lucroLiquido));
+      const pBase = Math.round((valores.base / somaPartes) * 100);
+      const pImp = Math.round((valores.impostos / somaPartes) * 100);
+      const pLuc = Math.max(0, 100 - pBase - pImp);
+      segCusto.setAttribute("style", "width:" + Math.max(4, pBase) + "%");
+      segImpostos.setAttribute("style", "width:" + Math.max(4, pImp) + "%");
+      segLucro.setAttribute("style", "width:" + Math.max(0, pLuc) + "%");
+      legCusto.rotulo.textContent = "Base " + pBase + "%";
+      legImpostos.rotulo.textContent = "Impostos " + pImp + "%";
+      legLucro.rotulo.textContent = "Lucro " + pLuc + "%";
     }
     exibir();
-    return { exibir, destaque, memoria: ui.cartao("Memória de cálculo", ...campos.map((item) => item.bloco)) };
+    return {
+      exibir,
+      destaque,
+      memoria: ui.cartao("Memória de cálculo", barraComposicao, legenda, ...grupos.values()),
+    };
   }
 
   function orcamento(ctx) {
@@ -91,16 +166,20 @@ Paisagismo.telasOrcamento = (() => {
 
   function historico(ctx) {
     if (!ctx.dados.salvos.length) {
-      const vazio = ui.cartao("Nenhum orçamento salvo",
-        ui.elemento("p", "Salve um projeto para consultar seu preço e os valores usados no cálculo."),
-        ui.botao("Ir para orçamento", () => ctx.navegar("orcamento"), true));
-      vazio.classList.add("historico-vazio", "estado-vazio");
+      const vazio = ui.estadoVazio(
+        "Nenhum orçamento salvo",
+        "Salve um projeto para consultar seu preço e os valores usados no cálculo.",
+        ["1. Configure o orçamento", "2. Clique em Salvar orçamento", "3. Emita a proposta comercial"],
+        ui.botao("Ir para orçamento", () => ctx.navegar("orcamento")),
+      );
+      vazio.classList.add("historico-vazio");
       return [ui.cabecalho("Orçamentos salvos", "Consulte as versões registradas de cada proposta."), vazio];
     }
     const comercial = Paisagismo.telasComerciais;
     const filtros = ui.elemento("div", undefined, "formulario-comercial filtros-historico");
     const busca = ui.elemento("input");
     busca.type = "search";
+    busca.placeholder = "Ex.: Jardim, cliente...";
     const de = ui.elemento("input");
     de.type = "date";
     const ate = ui.elemento("input");
@@ -124,14 +203,29 @@ Paisagismo.telasOrcamento = (() => {
         if (!normalizar(item.projeto.nome + " " + item.clienteNome).includes(termo)
           || (situacao.value && item.acompanhamento.situacao !== situacao.value)
           || (de.value && dia < de.value) || (ate.value && dia > ate.value)) return [];
-        const linha = ui.elemento("div", undefined, "linha");
+        const linha = ui.elemento("div", undefined, "linha cartao-proposta-item");
         const detalhes = ui.elemento("div");
-        const valor = Paisagismo.calcular(item.projeto, item.hora).preco;
-        detalhes.append(ui.elemento("strong", item.projeto.nome),
-          ui.elemento("p", [item === ctx.versaoPendente && "Gravação pendente", item.clienteNome,
-            item.acompanhamento.situacao, ui.brl(valor),
-            data.format(new Date(item.data))].filter(Boolean).join(" · ")));
-        linha.append(detalhes, ui.botao("Abrir", () => ctx.abrir(indice), true));
+        const calculado = Paisagismo.calcular(item.projeto, item.hora);
+        const etiqueta = ui.elemento("span", item.acompanhamento.situacao, "status-proposta");
+        etiqueta.dataset.situacao = item.acompanhamento.situacao;
+        detalhes.append(
+          ui.elemento("strong", item.projeto.nome),
+          ui.elemento("p", [
+            item === ctx.versaoPendente && "Gravação pendente",
+            item.clienteNome,
+            item.acompanhamento.situacao,
+            ui.brl(calculado.preco),
+            ui.numero(calculado.horas) + " h",
+            data.format(new Date(item.data)),
+          ].filter(Boolean).join(" · ")),
+          etiqueta,
+        );
+        const acoesLinha = ui.elemento("div", undefined, "acoes");
+        acoesLinha.append(
+          ui.botao("Prévia", () => ctx.navegar("proposta", item), true),
+          ui.botao("Abrir", () => ctx.abrir(indice)),
+        );
+        linha.append(detalhes, acoesLinha);
         return [linha];
       });
       paginas.atualizar(registros.length, 0);

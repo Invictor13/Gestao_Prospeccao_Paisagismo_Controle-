@@ -35,6 +35,19 @@ Paisagismo.telasComerciais = (() => {
     return rotular(rotulo, entrada);
   }
 
+  function iniciaisNome(nome) {
+    const partes = (nome || "").trim().split(/\s+/).filter(Boolean);
+    if (!partes.length) return "NC";
+    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+  }
+
+  function somarDias(dataIso, dias) {
+    const base = new Date(dataIso + "T12:00:00Z");
+    base.setUTCDate(base.getUTCDate() + dias);
+    return base.toISOString().slice(0, 10);
+  }
+
   function dadosProjeto(ctx, atualizar) {
     const projeto = ctx.dados.projeto;
     const grade = ui.elemento("div", undefined, "formulario-comercial");
@@ -76,27 +89,8 @@ Paisagismo.telasComerciais = (() => {
     const lista = ui.elemento("div", undefined, "pilha");
     const paginas = ui.paginador(5, exibir, "Páginas de clientes");
     const atualizar = ctx.aoAlterar(() => {});
-    function exibir(inicio, fim) {
-      lista.replaceChildren(...ctx.dados.clientes.slice(inicio, fim).map((cliente) => {
-        const detalhes = ui.elemento("details", undefined, "cartao");
-        const titulo = ui.elemento("summary", cliente.nome || "Novo cliente");
-        const grade = ui.elemento("div", undefined, "formulario-comercial");
-        const campos = [["Nome ou empresa", "nome"], ["Pessoa de contato", "contato"],
-          ["Telefone", "telefone", "tel"], ["E-mail", "email", "email"], ["Observações internas", "notas", "longo"]];
-        for (const [rotulo, chave, tipo] of campos) {
-          grade.append(campo(rotulo, cliente, chave, () => {
-            if (!atualizar()) return false;
-            titulo.textContent = cliente.nome || "Novo cliente";
-            return true;
-          }, tipo));
-        }
-        detalhes.append(titulo, grade);
-        return detalhes;
-      }));
-      if (!ctx.dados.clientes.length) lista.append(ui.cartao("Nenhum cliente cadastrado",
-        ui.elemento("p", "Cadastre um cliente para vincular seus projetos e propostas.")));
-    }
-    const adicionar = ui.botao("Cadastrar cliente", () => {
+
+    function criarNovoCliente() {
       const cliente = Object.fromEntries(regras.camposCliente.map((chave) => [chave, ""]));
       cliente.id = regras.id();
       ctx.dados.clientes.unshift(cliente);
@@ -104,12 +98,66 @@ Paisagismo.telasComerciais = (() => {
       paginas.atualizar(ctx.dados.clientes.length, 0);
       lista.firstElementChild.open = true;
       lista.firstElementChild.querySelector("input").focus();
-    });
+    }
+
+    function exibir(inicio, fim) {
+      lista.replaceChildren(...ctx.dados.clientes.slice(inicio, fim).map((cliente) => {
+        const detalhes = ui.elemento("details", undefined, "cartao");
+        const titulo = ui.elemento("summary");
+        const resumoLinha = ui.elemento("div", undefined, "resumo-cliente");
+        const identidade = ui.elemento("div", undefined, "identidade-cliente");
+        const avatar = ui.elemento("span", iniciaisNome(cliente.nome), "avatar-cliente");
+        avatar.setAttribute("aria-hidden", "true");
+        const textos = ui.elemento("div", undefined, "dados-resumo-cliente");
+        const nomeTexto = ui.elemento("strong", cliente.nome || "Novo cliente");
+        const subtextoContato = ui.elemento("small");
+        const atualizarResumo = () => {
+          nomeTexto.textContent = cliente.nome || "Novo cliente";
+          avatar.textContent = iniciaisNome(cliente.nome);
+          const infoContato = [cliente.contato, cliente.telefone, cliente.email].filter(Boolean).join(" · ");
+          subtextoContato.textContent = infoContato || "Clique para editar dados de contato";
+        };
+        atualizarResumo();
+        textos.append(nomeTexto, subtextoContato);
+        identidade.append(avatar, textos);
+
+        const vinculados = new Set(
+          ctx.dados.salvos
+            .filter((s) => s.projeto.cliente === cliente.id)
+            .map((s) => regras.chaveProjeto(s.projeto)),
+        ).size;
+        const badgeProjetos = ui.elemento("span",
+          vinculados ? vinculados + (vinculados === 1 ? " projeto" : " projetos") : "Sem propostas salvas",
+          "etiqueta-item");
+        if (vinculados) badgeProjetos.dataset.destaque = "publico";
+        resumoLinha.append(identidade, badgeProjetos);
+        titulo.append(resumoLinha);
+
+        const grade = ui.elemento("div", undefined, "formulario-comercial");
+        const campos = [["Nome ou empresa", "nome"], ["Pessoa de contato", "contato"],
+          ["Telefone", "telefone", "tel"], ["E-mail", "email", "email"], ["Observações internas", "notas", "longo"]];
+        for (const [rotulo, chave, tipo] of campos) {
+          grade.append(campo(rotulo, cliente, chave, () => {
+            if (!atualizar()) return false;
+            atualizarResumo();
+            return true;
+          }, tipo));
+        }
+        detalhes.append(titulo, grade);
+        return detalhes;
+      }));
+      if (!ctx.dados.clientes.length) {
+        lista.append(ui.estadoVazio(
+          "Nenhum cliente cadastrado",
+          "Cadastre um cliente para vincular seus projetos e propostas.",
+          ["1. Registre contatos e notas", "2. Vincule ao orçamento", "3. Acompanhe propostas por cliente"],
+          ui.botao("Cadastrar primeiro cliente", criarNovoCliente),
+        ));
+      }
+    }
+    const adicionar = ui.botao("Cadastrar cliente", criarNovoCliente);
     paginas.atualizar(ctx.dados.clientes.length);
     const painel = ui.cabecalho("Clientes", "Guarde os contatos de quem contrata seus projetos.", adicionar);
-    if (!ctx.dados.clientes.length) {
-      lista.firstElementChild.classList.add("estado-vazio");
-    }
     return [painel, lista, paginas.controles];
   }
 
@@ -119,10 +167,33 @@ Paisagismo.telasComerciais = (() => {
     const atualizar = ctx.aoAlterar(() => {});
     const paginas = ui.paginador(window.matchMedia?.("(max-width: 690px)").matches ? 3 : 6, (inicio, fim) => {
       lista.replaceChildren(...ctx.dados.modelos.slice(inicio, fim).map((modelo, indice) => {
+        const horasTotais = Paisagismo.horasProjeto(modelo.etapas);
+        const topoCard = ui.elemento("div", undefined, "topo-modelo");
+        const icone = ui.elemento("span", iniciaisNome(modelo.nome || "M"), "icone-modelo");
+        icone.setAttribute("aria-hidden", "true");
+        const badges = ui.elemento("div", undefined, "badges-modelo");
+        badges.append(
+          ui.elemento("span", modelo.etapas.length + " etapas", "badge-modelo"),
+          ui.elemento("span", ui.numero(horasTotais) + " h", "badge-modelo"),
+        );
+        topoCard.append(icone, badges);
+
         const resumo = ui.elemento("p", modelo.etapas.length + " etapas · "
-          + ui.numero(Paisagismo.horasProjeto(modelo.etapas)) + " h");
-        const botao = ui.botao("Editar modelo", () => editarModelo(modelo, inicio + indice), true);
-        return ui.cartao(modelo.nome || "Modelo sem nome", resumo, botao);
+          + ui.numero(horasTotais) + " h");
+        const previa = ui.elemento("ul", undefined, "previa-etapas-modelo");
+        for (const [nomeEtapa, hEtapa] of modelo.etapas.slice(0, 3)) {
+          previa.append(ui.elemento("li", (nomeEtapa || "Etapa") + " (" + ui.numero(hEtapa) + "h)"));
+        }
+        if (modelo.etapas.length > 3) {
+          previa.append(ui.elemento("li", "+" + (modelo.etapas.length - 3) + " etapas"));
+        }
+
+        const acoesCard = ui.elemento("div", undefined, "acoes");
+        const botaoEditar = ui.botao("Editar modelo", () => editarModelo(modelo, inicio + indice), true);
+        const botaoAplicar = ui.botao("Aplicar modelo", () => ctx.aplicarModelo(modelo));
+        acoesCard.append(botaoEditar, botaoAplicar);
+        const card = ui.cartao(modelo.nome || "Modelo sem nome", topoCard, resumo, previa, acoesCard);
+        return card;
       }));
     }, "Páginas de modelos");
     function editarModelo(modelo, indice) {
@@ -191,32 +262,61 @@ Paisagismo.telasComerciais = (() => {
 
   function retornos(ctx) {
     const hoje = regras.hoje();
-    const pendentes = ctx.dados.salvos.map((item, indice) => ({ item, indice }))
+    const obterPendentes = () => ctx.dados.salvos.map((item, indice) => ({ item, indice }))
       .filter(({ item: { acompanhamento: a } }) => a.proximo && !["Aprovada", "Recusada"].includes(a.situacao))
       .sort((a, b) => a.item.acompanhamento.proximo.localeCompare(b.item.acompanhamento.proximo));
+    let pendentes = obterPendentes();
     const topo = ui.cabecalho("Próximos contatos", "Acompanhe os retornos registrados nas propostas.");
     if (!pendentes.length) {
-      const vazio = ui.cartao("Nenhum retorno agendado",
-        ui.elemento("p", "Abra um orçamento salvo e informe a data do próximo contato no acompanhamento comercial."),
-        ui.botao("Ver orçamentos salvos", () => ctx.navegar("historico"), true));
-      vazio.classList.add("estado-vazio");
+      const vazio = ui.estadoVazio(
+        "Nenhum retorno agendado",
+        "Abra um orçamento salvo e informe a data do próximo contato no acompanhamento comercial.",
+        ["1. Abra um orçamento salvo", "2. Defina a data do próximo contato", "3. Acompanhe os retornos aqui"],
+        ui.botao("Ver orçamentos salvos", () => ctx.navegar("historico")),
+      );
       return [topo, vazio];
     }
-    const grupos = [["Atrasados", (dia) => dia < hoje], ["Hoje", (dia) => dia === hoje],
-      ["Agendados", (dia) => dia > hoje]];
+    const grupos = [
+      ["Atrasados", "atrasado", (dia) => dia < hoje],
+      ["Hoje", "hoje", (dia) => dia === hoje],
+      ["Agendados", "agendado", (dia) => dia > hoje],
+    ];
     const lista = ui.elemento("div", undefined, "pilha agenda-grupos");
     const paginas = ui.paginador(6, (inicio, fim) => {
+      pendentes = obterPendentes();
       const visiveis = pendentes.slice(inicio, fim);
-      lista.replaceChildren(...grupos.map(([titulo, pertence]) => {
+      lista.replaceChildren(...grupos.map(([titulo, urgencia, pertence]) => {
         const linhas = visiveis.filter(({ item }) => pertence(item.acompanhamento.proximo)).map(({ item, indice }) => {
-          const linha = ui.elemento("div", undefined, "linha");
+          const linha = ui.elemento("div", undefined, "linha item-agenda");
           const texto = ui.elemento("div");
-          texto.append(ui.elemento("strong", [item.clienteNome, item.projeto.nome].filter(Boolean).join(" · ")),
-            ui.elemento("p", regras.formatarData(item.acompanhamento.proximo) + " · " + (item.acompanhamento.acao || "Retomar contato")));
-          linha.append(texto, ui.botao("Abrir", () => ctx.abrir(indice), true));
+          const badgeData = ui.elemento("span", regras.formatarData(item.acompanhamento.proximo), "badge-prazo");
+          badgeData.dataset.urgencia = urgencia;
+          const badgeSituacao = ui.elemento("span", item.acompanhamento.situacao, "status-proposta");
+          badgeSituacao.dataset.situacao = item.acompanhamento.situacao;
+          texto.append(
+            ui.elemento("strong", [item.clienteNome, item.projeto.nome].filter(Boolean).join(" · ")),
+            ui.elemento("p", regras.formatarData(item.acompanhamento.proximo) + " · " + (item.acompanhamento.acao || "Retomar contato")),
+            badgeData,
+            badgeSituacao,
+          );
+          const acoesItem = ui.elemento("div", undefined, "acoes");
+          const reagendar = ui.botao("+7 dias", () => {
+            const base = item.acompanhamento.proximo < hoje ? hoje : item.acompanhamento.proximo;
+            item.acompanhamento.ultimo = hoje;
+            item.acompanhamento.proximo = somarDias(base, 7);
+            ctx.gravar("Contato reagendado para " + regras.formatarData(item.acompanhamento.proximo) + ".");
+            pendentes = obterPendentes();
+            paginas.atualizar(pendentes.length);
+            lista.querySelector("button")?.focus();
+          }, true);
+          acoesItem.append(reagendar, ui.botao("Abrir", () => ctx.abrir(indice), true));
+          linha.append(texto, acoesItem);
           return linha;
         });
-        return ui.cartao(titulo, ...(linhas.length ? linhas : [ui.elemento("p", "Nenhum retorno nesta página.")]));
+        const cardGrupo = ui.cartao(titulo, ...(linhas.length ? linhas : [ui.elemento("p", "Nenhum retorno nesta página.")]));
+        cardGrupo.classList.add("grupo-agenda");
+        cardGrupo.dataset.grupo = titulo;
+        return cardGrupo;
       }));
     }, "Páginas de próximos contatos");
     paginas.atualizar(pendentes.length);
