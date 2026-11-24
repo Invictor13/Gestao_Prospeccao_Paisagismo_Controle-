@@ -9,6 +9,7 @@
   const tentarGravar = document.querySelector("#tentar-gravar");
   const menu = document.querySelector("#menu-mobile");
   const ferramentas = document.querySelector("#ferramentas-sistema");
+  const menuGestao = document.querySelector("#menu-gestao");
   document.querySelector("#abrir-sobre-dev").addEventListener("click", () => {
     document.querySelector("#sobre-dev").showModal();
   });
@@ -25,7 +26,10 @@
   menu.addEventListener("click", () => menuAberto(menu.getAttribute("aria-expanded") !== "true"));
   document.querySelector(".barra-app").addEventListener("keydown", (evento) => {
     if (evento.key !== "Escape") return;
-    if (ferramentas.open) {
+    if (menuGestao?.open) {
+      menuGestao.open = false;
+      menuGestao.querySelector("summary")?.focus();
+    } else if (ferramentas.open) {
       ferramentas.open = false;
       ferramentas.querySelector("summary").focus();
     } else if (menu.getAttribute("aria-expanded") === "true") {
@@ -56,10 +60,27 @@
   preferencia("#animar-fundo", "paisagismo.animarFundo", "fundo-animado");
   preferencia("#modo-compacto", "paisagismo.modoCompacto", "listas-compactas");
 
-  function status(mensagem = "") {
+  let timerStatus = null;
+  function status(mensagem = "", persistente = false) {
+    if (timerStatus) {
+      window.clearTimeout?.(timerStatus);
+      timerStatus = null;
+    }
     aviso.textContent = mensagem;
     aviso.hidden = !mensagem;
+    const ehAlerta = persistente || !tentarGravar.hidden
+      || /pendente|não pôde|não puderam|inválido|fora do intervalo|excede|erro/i.test(mensagem);
+    if (ehAlerta) aviso.dataset.tipo = "alerta";
+    else delete aviso.dataset.tipo;
+    if (mensagem && !ehAlerta && window.matchMedia) {
+      timerStatus = window.setTimeout?.(() => {
+        if (aviso.textContent === mensagem && tentarGravar.hidden) aviso.hidden = true;
+      }, 3600);
+    }
   }
+  aviso.addEventListener("click", () => {
+    if (tentarGravar.hidden) aviso.hidden = true;
+  });
 
   try {
     dados = demo ? Paisagismo.criarDemonstracao() : armazenamento.carregar();
@@ -186,6 +207,7 @@
     const aberto = menu.getAttribute("aria-expanded") === "true";
     menuAberto(false);
     ferramentas.open = false;
+    if (menuGestao) menuGestao.open = false;
     navegar(botao.dataset.tela);
     if (aberto) {
       const titulo = conteudo.querySelector("h1");

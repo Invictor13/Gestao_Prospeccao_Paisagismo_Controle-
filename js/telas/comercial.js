@@ -2,6 +2,26 @@ Paisagismo.telasComerciais = (() => {
   const ui = Paisagismo.ui;
   const regras = Paisagismo.comercial;
 
+  const tiposImovel = [
+    ["", "Selecione o tipo"],
+    ["Residencial unifamiliar", "Residencial unifamiliar (monofamiliar)"],
+    ["Residencial multifamiliar", "Residencial multifamiliar (condomínio/prédio)"],
+    ["Comercial", "Comercial"],
+    ["Corporativo / Institucional", "Corporativo / Institucional"],
+    ["Chácara / Sítio", "Chácara / Sítio"],
+  ];
+  const situacoesObra = [
+    ["", "Selecione o estágio"],
+    ["Na planta / Planejamento", "Na planta / Planejamento"],
+    ["Em obra", "Em obra"],
+    ["Já construído / Reforma", "Já construído / Reforma"],
+  ];
+  const opcoesInsolacao = ["Sol pleno", "Meia-sombra", "Sombra", "Luz difusa"];
+  const opcoesMateriais = [
+    "Madeira/Deck", "Pedra natural", "Concreto", "Iluminação",
+    "Irrigação", "Horta/Frutíferas", "Baixa manutenção", "Vasos autorais",
+  ];
+
   function seletor(rotulo, opcoes, valor, alterar) {
     const select = ui.elemento("select");
     select.setAttribute("aria-label", rotulo);
@@ -28,11 +48,37 @@ Paisagismo.telasComerciais = (() => {
     const entrada = ui.elemento(tipo === "longo" ? "textarea" : "input");
     if (tipo === "longo") entrada.rows = 3;
     else entrada.type = tipo;
-    entrada.value = objeto[chave];
+    entrada.value = objeto[chave] ?? "";
     entrada.addEventListener("input", () => {
       if (entrada.validity.valid) ui.editar(objeto, chave, atualizar)(entrada.value);
     });
     return rotular(rotulo, entrada);
+  }
+
+  function seletorMultiplo(rotulo, opcoes, objeto, chave, atualizar) {
+    const bloco = ui.elemento("div", undefined, "campo campo-completo");
+    bloco.append(ui.elemento("span", rotulo));
+    const gradeChips = ui.elemento("div", undefined, "chips-selecao");
+    const lerAtivos = () => new Set(
+      (objeto[chave] || "").split(",").map((s) => s.trim()).filter(Boolean),
+    );
+    const ativos = lerAtivos();
+    for (const opcao of opcoes) {
+      const btn = ui.elemento("button", opcao, "chip-opcao");
+      btn.type = "button";
+      btn.setAttribute("aria-pressed", String(ativos.has(opcao)));
+      btn.addEventListener("click", () => {
+        if (ativos.has(opcao)) ativos.delete(opcao);
+        else ativos.add(opcao);
+        const novoValor = [...ativos].join(", ");
+        if (ui.editar(objeto, chave, atualizar)(novoValor)) {
+          btn.setAttribute("aria-pressed", String(ativos.has(opcao)));
+        }
+      });
+      gradeChips.append(btn);
+    }
+    bloco.append(gradeChips);
+    return bloco;
   }
 
   function iniciaisNome(nome) {
@@ -48,16 +94,63 @@ Paisagismo.telasComerciais = (() => {
     return base.toISOString().slice(0, 10);
   }
 
+  function resumoBriefingCliente(cliente) {
+    if (!cliente) return "";
+    return [
+      cliente.tipoImovel,
+      cliente.areaTerreno && cliente.areaTerreno + " m²",
+      cliente.situacaoObra,
+      cliente.insolacao && "Luz: " + cliente.insolacao,
+      cliente.pets && "Pets: " + cliente.pets,
+      cliente.familia && "Uso: " + cliente.familia,
+      cliente.materiais && "Preferências: " + cliente.materiais,
+    ].filter(Boolean).join(" · ");
+  }
+
   function dadosProjeto(ctx, atualizar) {
     const projeto = ctx.dados.projeto;
     const grade = ui.elemento("div", undefined, "formulario-comercial");
     const opcoes = [["", "Selecione um cliente"], ...ctx.dados.clientes.map((c) => [c.id, c.nome])];
+    const campoLocal = campo("Local do projeto", projeto, "local", atualizar);
+    const campoArea = campo("Área estimada (m²)", projeto, "area", atualizar);
+    const boxBriefing = ui.elemento("div", undefined, "resumo-briefing-projeto");
+    const atualizarBriefing = () => {
+      const cli = ctx.dados.clientes.find((c) => c.id === projeto.cliente);
+      const texto = resumoBriefingCliente(cli);
+      boxBriefing.textContent = texto ? "Briefing do cliente: " + texto : "";
+      boxBriefing.hidden = !texto;
+    };
+    const seletorCliente = seletor("Cliente", opcoes, projeto.cliente, (idCliente) => {
+      if (!ui.editar(projeto, "cliente", atualizar)(idCliente)) return false;
+      const cli = ctx.dados.clientes.find((c) => c.id === idCliente);
+      if (cli) {
+        let alterou = false;
+        if (!projeto.local && cli.endereco) {
+          projeto.local = cli.endereco;
+          const inp = campoLocal.querySelector("input");
+          if (inp) inp.value = cli.endereco;
+          alterou = true;
+        }
+        if (!projeto.area && cli.areaTerreno) {
+          projeto.area = cli.areaTerreno;
+          const inp = campoArea.querySelector("input");
+          if (inp) inp.value = cli.areaTerreno;
+          alterou = true;
+        }
+        if (alterou) atualizar();
+      }
+      atualizarBriefing();
+      return true;
+    });
+    atualizarBriefing();
+
     const grupos = [
       ["Projeto", [
-        rotular("Cliente", seletor("Cliente", opcoes, projeto.cliente, ui.editar(projeto, "cliente", atualizar))),
+        rotular("Cliente", seletorCliente),
         campo("Tipo de serviço", projeto, "tipo", atualizar),
-        campo("Local do projeto", projeto, "local", atualizar),
-        campo("Área estimada (m²)", projeto, "area", atualizar),
+        campoLocal,
+        campoArea,
+        boxBriefing,
         ui.botao("Gerenciar clientes", () => ctx.navegar("clientes"), true),
       ]],
       ["Proposta", [
@@ -101,7 +194,7 @@ Paisagismo.telasComerciais = (() => {
     }
 
     const adicionar = ui.botao("Cadastrar cliente", criarNovoCliente);
-    const painel = ui.cabecalho("Clientes", "Guarde os contatos de quem contrata seus projetos.", adicionar);
+    const painel = ui.cabecalho("Clientes", "Contatos, dados do terreno e estudo preliminar de cada cliente.", adicionar);
 
     function exibir(inicio, fim) {
       const vazio = !ctx.dados.clientes.length;
@@ -119,8 +212,14 @@ Paisagismo.telasComerciais = (() => {
         const atualizarResumo = () => {
           nomeTexto.textContent = cliente.nome || "Novo cliente";
           avatar.textContent = iniciaisNome(cliente.nome);
-          const infoContato = [cliente.contato, cliente.telefone, cliente.email].filter(Boolean).join(" · ");
-          subtextoContato.textContent = infoContato || "Clique para editar dados de contato";
+          const infoContato = [
+            cliente.tipoImovel,
+            cliente.areaTerreno && cliente.areaTerreno + " m²",
+            cliente.contato,
+            cliente.telefone,
+            cliente.email,
+          ].filter(Boolean).join(" · ");
+          subtextoContato.textContent = infoContato || "Clique para preencher contato e dados do imóvel";
         };
         atualizarResumo();
         textos.append(nomeTexto, subtextoContato);
@@ -138,23 +237,66 @@ Paisagismo.telasComerciais = (() => {
         resumoLinha.append(identidade, badgeProjetos);
         titulo.append(resumoLinha);
 
+        const aoEditarCliente = () => {
+          if (!atualizar()) return false;
+          atualizarResumo();
+          return true;
+        };
+
+        /* Nível 1: Contato e dados essenciais do imóvel */
         const grade = ui.elemento("div", undefined, "formulario-comercial");
-        const campos = [["Nome ou empresa", "nome"], ["Pessoa de contato", "contato"],
-          ["Telefone", "telefone", "tel"], ["E-mail", "email", "email"], ["Observações internas", "notas", "longo"]];
-        for (const [rotulo, chave, tipo] of campos) {
-          grade.append(campo(rotulo, cliente, chave, () => {
-            if (!atualizar()) return false;
-            atualizarResumo();
-            return true;
-          }, tipo));
+        const camposEssenciais = [
+          ["Nome ou empresa", "nome"],
+          ["Pessoa de contato", "contato"],
+          ["Telefone", "telefone", "tel"],
+          ["E-mail", "email", "email"],
+          ["Endereço do terreno / imóvel", "endereco"],
+          ["Área a ser trabalhada (m²)", "areaTerreno"],
+        ];
+        for (const [rotulo, chave, tipo] of camposEssenciais) {
+          grade.append(campo(rotulo, cliente, chave, aoEditarCliente, tipo));
         }
-        detalhes.append(titulo, grade);
+        grade.append(
+          rotular("Tipo de imóvel", seletor("Tipo de imóvel", tiposImovel, cliente.tipoImovel || "",
+            ui.editar(cliente, "tipoImovel", aoEditarCliente))),
+          campo("Observações internas", cliente, "notas", aoEditarCliente, "longo"),
+        );
+
+        /* Nível 2: Estudo preliminar / Informações avançadas */
+        const blocoAvancado = ui.elemento("details", undefined, "subcartao-briefing");
+        const resumoAvancado = ui.elemento("summary", "Estudo preliminar e informações avançadas");
+        const gradeAvancada = ui.elemento("div", undefined, "formulario-comercial");
+        gradeAvancada.append(
+          rotular("Situação do local", seletor("Situação do local", situacoesObra, cliente.situacaoObra || "",
+            ui.editar(cliente, "situacaoObra", aoEditarCliente))),
+          campo("Integrantes da família / usuários", cliente, "familia", aoEditarCliente),
+          campo("Possui animais / pets?", cliente, "pets", aoEditarCliente),
+          seletorMultiplo("Insolação / luminosidade do ambiente", opcoesInsolacao, cliente, "insolacao", aoEditarCliente),
+          seletorMultiplo("Materiais e elementos de preferência", opcoesMateriais, cliente, "materiais", aoEditarCliente),
+          campo("Notas técnicas do estudo preliminar", cliente, "briefingNotas", aoEditarCliente, "longo"),
+        );
+        blocoAvancado.append(resumoAvancado, gradeAvancada);
+
+        const rodapeCliente = ui.elemento("div", undefined, "rodape-registro-exclusao");
+        const btnExcluirCli = ui.botao("Excluir cliente", () => {
+          if (!window.confirm("Excluir o cliente \"" + (cliente.nome || "Novo cliente") + "\"? As propostas já salvas serão mantidas.")) return;
+          const pos = ctx.dados.clientes.indexOf(cliente);
+          if (pos < 0) return;
+          ctx.dados.clientes.splice(pos, 1);
+          if (ctx.dados.projeto.cliente === cliente.id) ctx.dados.projeto.cliente = "";
+          ctx.gravar("Cliente excluído.");
+          paginas.atualizar(ctx.dados.clientes.length);
+        }, true);
+        btnExcluirCli.classList.add("btn-remover-contextual");
+        rodapeCliente.append(btnExcluirCli);
+
+        detalhes.append(titulo, grade, blocoAvancado, rodapeCliente);
         return detalhes;
       }));
       if (vazio) {
         lista.append(ui.estadoVazio(
           "Clientes",
-          "Nenhum cliente cadastrado ainda. Registre os contatos de quem contrata seus projetos para vincular às propostas.",
+          "Nenhum cliente cadastrado ainda. Registre contatos, dados do terreno e estudo preliminar para vincular às propostas.",
           ui.botao("Cadastrar cliente", criarNovoCliente),
           "clientes",
         ));
@@ -191,21 +333,32 @@ Paisagismo.telasComerciais = (() => {
           previa.append(ui.elemento("li", "+" + (modelo.etapas.length - 3) + " etapas"));
         }
 
-        const acoesCard = ui.elemento("div", undefined, "acoes");
-        const botaoEditar = ui.botao("Editar modelo", () => editarModelo(modelo, inicio + indice), true);
+        const acoesCard = ui.elemento("div", undefined, "acoes acoes-card-modelo");
+        const botaoEditar = ui.botao("Editar", () => editarModelo(modelo, inicio + indice), true);
+        const botaoExcluir = ui.botao("Excluir", () => excluirModelo(modelo), true);
+        botaoExcluir.classList.add("btn-remover-contextual");
         const botaoAplicar = ui.botao("Aplicar modelo", () => ctx.aplicarModelo(modelo));
-        acoesCard.append(botaoEditar, botaoAplicar);
+        acoesCard.append(botaoAplicar, botaoEditar, botaoExcluir);
         const card = ui.cartao(modelo.nome || "Modelo sem nome", topoCard, resumo, previa, acoesCard);
         return card;
       }));
     }, "Páginas de modelos");
+    function excluirModelo(modelo) {
+      if (!window.confirm("Excluir o modelo \"" + (modelo.nome || "Modelo sem nome") + "\"?")) return;
+      const pos = ctx.dados.modelos.indexOf(modelo);
+      if (pos < 0) return;
+      ctx.dados.modelos.splice(pos, 1);
+      ctx.gravar("Modelo de serviço excluído.");
+      exibir(Math.max(0, pos - 1));
+    }
     function editarModelo(modelo, indice) {
       const voltar = ui.botao("Voltar aos modelos", () => {
         exibir(indice);
-        lista.children[paginas.paginaDe(indice)].querySelector("button").focus();
+        lista.children[paginas.paginaDe(indice)]?.querySelector("button")?.focus();
       }, true);
       const acoes = ui.elemento("div", undefined, "acoes");
-      acoes.append(voltar, ui.botao("Aplicar ao rascunho", () => ctx.aplicarModelo(modelo)));
+      acoes.append(voltar, ui.botao("Excluir modelo", () => excluirModelo(modelo), true),
+        ui.botao("Aplicar ao rascunho", () => ctx.aplicarModelo(modelo)));
       const editor = ui.editor("Etapas do modelo (h)", "Horas", modelo.etapas, atualizar,
         ["Etapa", "Horas"], { ordenar: true, colunas: true,
           porPagina: window.matchMedia?.("(max-width: 690px)").matches ? 2
@@ -216,16 +369,26 @@ Paisagismo.telasComerciais = (() => {
       voltar.focus();
     }
     function exibir(indice = 0) {
+      if (!ctx.dados.modelos.length) {
+        area.replaceChildren(ui.estadoVazio(
+          "Modelos de serviço",
+          "Nenhum modelo salvo ainda. Crie um modelo a partir do orçamento atual para reutilizar suas etapas.",
+          ui.botao("Criar a partir do rascunho", () => criarModeloDoRascunho()),
+          "historico",
+        ));
+        return;
+      }
       paginas.mostrar(ctx.dados.modelos.length, indice);
       area.replaceChildren(topo, lista, paginas.controles);
     }
-    const criar = ui.botao("Criar a partir do rascunho", () => {
+    function criarModeloDoRascunho() {
       const modelo = { nome: ctx.dados.projeto.nome || "Novo modelo",
         etapas: ctx.dados.projeto.etapa.map(([nome, horas]) => [nome, horas]) };
       ctx.dados.modelos.unshift(modelo);
       ctx.gravar("Modelo criado.");
       editarModelo(modelo, 0);
-    });
+    }
+    const criar = ui.botao("Criar a partir do rascunho", criarModeloDoRascunho);
     const topo = ui.cabecalho("Modelos de serviço", "Reutilize uma estimativa inicial de etapas e horas.", criar);
     exibir();
     return [area];
@@ -239,8 +402,11 @@ Paisagismo.telasComerciais = (() => {
       registro.situacao, ui.editar(registro, "situacao", atualizar))),
     campo("Último contato", registro, "ultimo", atualizar, "date"),
     campo("Próximo contato", registro, "proximo", atualizar, "date"),
-    campo("Próxima ação", registro, "acao", atualizar),
-    campo("Motivo de perda", registro, "motivo", atualizar, "longo"));
+    campo("Próxima ação", registro, "acao", atualizar));
+    for (const [chave, rotulo] of regras.etapasFluxo) {
+      grade.append(campo("Data · " + rotulo, registro.marcos, chave, atualizar, "date"));
+    }
+    grade.append(campo("Motivo de perda", registro, "motivo", atualizar, "longo"));
     if (registro.emitida) grade.append(ui.elemento("p", "Emitida em " + regras.formatarData(registro.emitida)));
     return ui.cartao("Acompanhamento comercial", grade);
   }
@@ -311,7 +477,17 @@ Paisagismo.telasComerciais = (() => {
             paginas.atualizar(pendentes.length);
             lista.querySelector("button")?.focus();
           }, true);
-          acoesItem.append(reagendar, ui.botao("Abrir", () => ctx.abrir(indice), true));
+          const excluirContato = ui.botao("Excluir", () => {
+            if (!window.confirm("Remover este contato agendado da agenda?")) return;
+            item.acompanhamento.proximo = "";
+            item.acompanhamento.acao = "";
+            ctx.gravar("Contato removido da agenda.");
+            pendentes = obterPendentes();
+            if (!pendentes.length) ctx.navegar("retornos");
+            else paginas.atualizar(pendentes.length);
+          }, true);
+          excluirContato.classList.add("btn-remover-contextual");
+          acoesItem.append(reagendar, excluirContato, ui.botao("Abrir", () => ctx.abrir(indice), true));
           linha.append(texto, acoesItem);
           return linha;
         });
