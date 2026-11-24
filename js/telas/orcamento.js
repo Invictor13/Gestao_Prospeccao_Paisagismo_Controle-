@@ -167,13 +167,13 @@ Paisagismo.telasOrcamento = (() => {
   function historico(ctx) {
     if (!ctx.dados.salvos.length) {
       const vazio = ui.estadoVazio(
-        "Nenhum orçamento salvo",
-        "Salve um projeto para consultar seu preço e os valores usados no cálculo.",
-        ["1. Configure o orçamento", "2. Clique em Salvar orçamento", "3. Emita a proposta comercial"],
+        "Orçamentos salvos",
+        "Nenhum orçamento salvo ainda. Salve um projeto para consultar versões, preços e comparativos aqui.",
         ui.botao("Ir para orçamento", () => ctx.navegar("orcamento")),
+        "historico",
       );
       vazio.classList.add("historico-vazio");
-      return [ui.cabecalho("Orçamentos salvos", "Consulte as versões registradas de cada proposta."), vazio];
+      return [vazio];
     }
     const comercial = Paisagismo.telasComerciais;
     const filtros = ui.elemento("div", undefined, "formulario-comercial filtros-historico");

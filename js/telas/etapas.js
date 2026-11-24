@@ -41,9 +41,9 @@ Paisagismo.telaEtapas = (ctx) => {
   const resumo = ui.elemento("div", undefined, "pilha resumo resumo-operacao");
   resumo.append(destaque, distribuicao);
 
+  const porPagina = window.matchMedia?.("(min-width: 1041px)").matches ? 14 : 8;
   grade.append(ui.editor("Atividades e durações (h)", "Horas estimadas", etapas, ctx.aoAlterar(exibir),
-    ["Atividade", "Horas"], { tipo: "etapa", ordenar: true, colunas: true,
-      porPagina: window.matchMedia?.("(min-width: 1041px)").matches ? 14 : 8 }), resumo);
+    ["Atividade", "Horas"], { tipo: "etapa", ordenar: true, colunas: true, porPagina }), resumo);
   exibir();
   return [ui.cabecalho("Etapas do projeto", "Estime o tempo de trabalho de cada atividade."), grade];
 };

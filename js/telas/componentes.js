@@ -72,16 +72,12 @@ Paisagismo.ui = (() => {
     }
   }
 
-  function estadoVazio(titulo, descricao, passos = [], acao = null) {
-    const filhos = [elemento("p", descricao)];
-    if (passos.length) {
-      const trilha = elemento("div", undefined, "passos-vazio");
-      for (const passo of passos) trilha.append(elemento("span", passo, "passo-vazio-chip"));
-      filhos.push(trilha);
-    }
+  function estadoVazio(titulo, descricao, acao = null, icone = "historico") {
+    const bloco = elemento("section", undefined, "cartao estado-vazio");
+    bloco.dataset.icone = icone;
+    const filhos = [elemento("h1", titulo), elemento("p", descricao)];
     if (acao) filhos.push(acao);
-    const bloco = cartao(titulo, ...filhos);
-    bloco.classList.add("estado-vazio");
+    bloco.append(...filhos);
     return bloco;
   }
 
@@ -177,6 +173,17 @@ Paisagismo.ui = (() => {
     lista.setAttribute("role", "group");
     lista.setAttribute("aria-label", colunas.join(" · "));
     let atualizarBarrasVisiveis = () => {};
+    let termoBusca = "";
+    let filtroPeriodo = "";
+    const normalizar = (t) => String(t || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+    const obterFiltrados = () => itens
+      .map((item, indice) => ({ item, indice }))
+      .filter(({ item }) => {
+        if (termoBusca && !normalizar(item[0] + " " + (item[3] || "")).includes(termoBusca)) return false;
+        if (filtroPeriodo && (item[2] ?? "mensal") !== filtroPeriodo) return false;
+        return true;
+      });
+
     const paginacao = paginador(opcoes.porPagina ?? 8, renderizar, "Páginas de " + titulo.toLowerCase());
     let removido;
     const desfazer = botao("Desfazer remoção", () => {
@@ -184,18 +191,26 @@ Paisagismo.ui = (() => {
       itens.splice(indice, 0, item);
       if (atualizar()) {
         desfazer.hidden = true;
+        termoBusca = "";
+        filtroPeriodo = "";
+        if (campoBusca) campoBusca.value = "";
+        if (seletorPeriodo) seletorPeriodo.value = "";
         paginacao.mostrar(itens.length, indice);
-        lista.children[paginacao.paginaDe(indice)].querySelector("textarea").focus();
+        lista.children[paginacao.paginaDe(indice)]?.querySelector("textarea")?.focus();
       } else itens.splice(indice, 1);
     }, true);
     desfazer.hidden = true;
     const adicionar = botao("+ Adicionar item", () => {
       itens.push(["Novo item", 0]);
       if (atualizar()) {
+        termoBusca = "";
+        filtroPeriodo = "";
+        if (campoBusca) campoBusca.value = "";
+        if (seletorPeriodo) seletorPeriodo.value = "";
         paginacao.mostrar(itens.length, itens.length - 1);
-        const novo = lista.lastElementChild.querySelector("textarea");
-        novo.focus();
-        novo.select();
+        const novo = lista.lastElementChild?.querySelector("textarea");
+        novo?.focus();
+        novo?.select();
       } else itens.pop();
     }, true);
     adicionar.classList.add("adicionar");
@@ -205,13 +220,23 @@ Paisagismo.ui = (() => {
       atualizarBarrasVisiveis = () => {
         for (const fn of atualizadoresLinha) fn();
       };
-      lista.replaceChildren(...itens.slice(inicio, fim).map((item, local) => {
-        const indice = inicio + local;
+      const filtrados = obterFiltrados();
+      if (!filtrados.length && (termoBusca || filtroPeriodo)) {
+        lista.replaceChildren(elemento("p", "Nenhum item encontrado para o filtro informado."));
+        return;
+      }
+      lista.replaceChildren(...filtrados.slice(inicio, fim).map(({ item, indice }) => {
         const grupo = elemento("div", undefined, "editor");
         let subtotal;
+        let equivalenteMensal;
         let atualizarMeta = () => {};
+        const meses = { mensal: 1, trimestral: 3, anual: 12 };
         const atualizarSubtotal = () => {
           if (subtotal) subtotal.value = reais.format(item[1] * (item[2] ?? 1));
+          if (equivalenteMensal) {
+            const divisor = meses[item[2] ?? "mensal"] || 1;
+            equivalenteMensal.value = reais.format((Number(item[1]) || 0) / divisor);
+          }
           atualizarBarrasVisiveis();
         };
         function editar(coluna, valor) {
@@ -229,8 +254,9 @@ Paisagismo.ui = (() => {
           if (atualizar()) {
             removido = { indice, item };
             desfazer.hidden = false;
-            const proximo = Math.min(indice, itens.length - 1);
-            paginacao.mostrar(itens.length, proximo);
+            const restantes = obterFiltrados();
+            const proximo = Math.max(0, Math.min(indice, restantes.length - 1));
+            paginacao.mostrar(restantes.length, proximo);
             (lista.children[paginacao.paginaDe(proximo)]?.querySelector("textarea") || adicionar).focus();
           } else itens.splice(indice, 0, item);
         }, true);
@@ -248,7 +274,10 @@ Paisagismo.ui = (() => {
         detalhes.classList.add("botao-detalhes-item");
         const extras = elemento("div", undefined, "formulario-comercial detalhes-formulario");
         let modal;
-        const nomeDetalhes = () => detalhes.setAttribute("aria-label", "Detalhes de " + (item[0] || "item " + (indice + 1)));
+        const nomeDetalhes = () => {
+          detalhes.setAttribute("aria-label", "Detalhes de " + (item[0] || "item " + (indice + 1)));
+          nome.title = item[0] || "";
+        };
         nomeDetalhes();
         nome.dataset.valor = item[0];
         const texto = entrada("Nome do item " + (indice + 1), item[0], (valor) => {
@@ -261,49 +290,41 @@ Paisagismo.ui = (() => {
         nome.append(texto);
         cabecalhoItem.append(numeroBadge, nome);
 
-        const acoesItem = elemento("div", undefined, "acoes-item");
-        if (opcoes.tipo || opcoes.ordenar) acoesItem.append(detalhes);
-        acoesItem.append(remover);
-        grupo.append(cabecalhoItem, entrada(unidade + " do item " + (indice + 1), item[1], (v) => editar(1, v)), acoesItem);
-
         if (opcoes.tipo === "etapa") {
-          const meta = elemento("div", undefined, "meta-item-editor");
-          const barra = elemento("div", undefined, "barra-proporcao");
+          const barra = elemento("div", undefined, "barra-proporcao barra-proporcao-base");
           const barraInterna = elemento("div", undefined, "barra-proporcao-interna");
           barra.append(barraInterna);
-          const etiqueta = elemento("span", undefined, "etiqueta-item");
-          meta.append(barra, etiqueta);
-          grupo.append(meta);
+          grupo.append(barra);
           atualizarMeta = () => {
             const totalHoras = Math.max(0.01, itens.reduce((soma, [, h]) => soma + (Number(h) || 0), 0));
             const pct = Math.min(100, Math.round(((Number(item[1]) || 0) / totalHoras) * 100));
             barraInterna.setAttribute("style", "width:" + pct + "%");
-            const partes = [pct + "% do esforço"];
-            if (item[4] === true) {
-              partes.push("Entregável");
-              etiqueta.dataset.destaque = "publico";
-            } else {
-              delete etiqueta.dataset.destaque;
-            }
-            if (item[3]) partes.push(item[3]);
-            etiqueta.textContent = partes.join(" · ");
+            const info = [pct + "% do esforço", item[4] === true ? "Entregável na proposta" : "", item[3] || ""]
+              .filter(Boolean).join(" · ");
+            barra.title = info;
+            if (item[4] === true) numeroBadge.dataset.destaque = "publico";
+            else delete numeroBadge.dataset.destaque;
           };
           atualizadoresLinha.push(atualizarMeta);
         }
+
         if (opcoes.tipo === "custo") {
-          const meta = elemento("div", undefined, "meta-item-editor");
-          const etiqueta = elemento("span", undefined, "etiqueta-item");
-          meta.append(etiqueta);
+          const etiqueta = elemento("span", undefined, "etiqueta-item etiqueta-inline");
+          cabecalhoItem.append(etiqueta);
           atualizarMeta = () => {
-            const periodo = item[2] && item[2] !== "mensal" ? item[2] : "";
-            const categoria = item[3] || "";
-            const info = [periodo, categoria].filter(Boolean).join(" · ");
+            const p = item[2] && item[2] !== "mensal" ? (item[2] === "anual" ? "Anual" : "Trim.") : "";
+            const cat = item[3] || "";
+            const info = [p, cat].filter(Boolean).join(" · ");
             etiqueta.textContent = info;
-            meta.hidden = !info;
+            etiqueta.hidden = !info;
           };
           atualizadoresLinha.push(atualizarMeta);
-          grupo.append(meta);
         }
+
+        const acoesItem = elemento("div", undefined, "acoes-item");
+        if (opcoes.tipo || opcoes.ordenar) acoesItem.append(detalhes);
+        acoesItem.append(remover);
+        grupo.append(cabecalhoItem, entrada(unidade + " do item " + (indice + 1), item[1], (v) => editar(1, v)), acoesItem);
 
         if (opcoes.tipo || opcoes.ordenar) {
           if (opcoes.tipo === "despesa") {
@@ -311,13 +332,19 @@ Paisagismo.ui = (() => {
             atualizarSubtotal();
             extras.append(campo("Quantidade", item[2] ?? 1, (v) => editar(2, v)),
               campo("Unidade", item[3] ?? "", (v) => editar(3, v)),
-              rotuloSubtotal(subtotal));
+              rotuloValor("Subtotal do item", subtotal));
           }
           if (opcoes.tipo === "custo") {
             const comercial = Paisagismo.telasComerciais;
             const periodos = [["mensal", "Mensal"], ["trimestral", "Trimestral"], ["anual", "Anual"]];
-            extras.append(comercial.rotular("Periodicidade", comercial.seletor("Periodicidade", periodos,
-              item[2] ?? "mensal", (v) => editar(2, v))), campo("Categoria", item[3] ?? "", (v) => editar(3, v)));
+            equivalenteMensal = elemento("output");
+            atualizarSubtotal();
+            extras.append(
+              comercial.rotular("Periodicidade", comercial.seletor("Periodicidade", periodos,
+                item[2] ?? "mensal", (v) => editar(2, v))),
+              campo("Categoria", item[3] ?? "", (v) => editar(3, v)),
+              rotuloValor("Custo mensal equivalente", equivalenteMensal),
+            );
           }
           if (opcoes.tipo === "etapa") {
             const publico = elemento("input");
@@ -337,7 +364,7 @@ Paisagismo.ui = (() => {
               }
               modal.close();
               paginacao.mostrar(itens.length, destino);
-              lista.children[paginacao.paginaDe(destino)].querySelector("textarea").focus();
+              lista.children[paginacao.paginaDe(destino)]?.querySelector("textarea")?.focus();
             };
             if (indice > 0) extras.append(botao("Mover acima", () => mover(indice - 1), true));
             if (indice < itens.length - 1) extras.append(botao("Mover abaixo", () => mover(indice + 1), true));
@@ -347,20 +374,36 @@ Paisagismo.ui = (() => {
       }));
       atualizarBarrasVisiveis();
     }
-    paginacao.atualizar(itens.length);
+
+    let campoBusca;
+    let seletorPeriodo;
     const topo = elemento("div", undefined, "editor-topo");
     const acoes = elemento("div", undefined, "acoes");
+    if (opcoes.tipo === "custo") {
+      campoBusca = elemento("input");
+      campoBusca.type = "search";
+      campoBusca.placeholder = "Buscar despesa...";
+      campoBusca.className = "busca-compacta";
+      campoBusca.setAttribute("aria-label", "Buscar despesa da operação");
+      campoBusca.addEventListener("input", () => {
+        termoBusca = normalizar(campoBusca.value.trim());
+        paginacao.atualizar(obterFiltrados().length, 0);
+      });
+      acoes.append(campoBusca);
+    }
     acoes.append(desfazer, adicionar);
     topo.append(elemento("h2", titulo), acoes);
+    paginacao.atualizar(itens.length);
     const bloco = elemento("section", undefined, "cartao cartao-editor");
+    if (opcoes.tipo) bloco.dataset.tipo = opcoes.tipo;
     if (opcoes.colunas) lista.classList.add("lista-dupla");
     bloco.append(topo, lista, paginacao.controles);
     return bloco;
   }
 
-  function rotuloSubtotal(subtotal) {
+  function rotuloValor(rotulo, output) {
     const bloco = elemento("div", undefined, "campo");
-    bloco.append(elemento("span", "Subtotal do item"), subtotal);
+    bloco.append(elemento("span", rotulo), output);
     return bloco;
   }
 
