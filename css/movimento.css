@@ -1,16 +1,30 @@
+/* Background topográfico + papel algodão sutil */
 body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-color: var(--papel-fundo);
+  background-image:
+    radial-gradient(ellipse 68% 55% at 92% 4%, #dce7d270 0%, transparent 62%),
+    radial-gradient(ellipse 60% 50% at 6% 96%, #e6dfd266 0%, transparent 58%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='600' viewBox='0 0 900 600' fill='none'%3E%3Cg stroke='%23143329' stroke-opacity='0.055' stroke-width='1'%3E%3Cpath d='M-60 440C90 360 220 490 380 410C540 330 670 190 960 240'/%3E%3Cpath d='M-60 490C110 400 240 535 410 450C580 365 710 235 960 295'/%3E%3Cpath d='M-60 545C130 455 270 575 450 495C630 415 760 290 960 350'/%3E%3Cpath d='M120 -40C210 110 380 120 490 40C600 -40 740 -10 860 95'/%3E%3Cpath d='M190 -40C270 80 410 90 520 20C620 -40 740 15 890 130'/%3E%3Cpath d='M520 620C600 500 710 470 840 500C890 512 930 535 960 560'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: cover, cover, 900px 600px;
+  background-position: center, center, top right;
+}
+
+/* Micro-textura tátil de papel algodão */
+body::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse at 92% 6%, #cfe5c3 0%, transparent 48%),
-    radial-gradient(ellipse at 8% 94%, #d6e7cf 0%, transparent 46%),
-    radial-gradient(ellipse at 50% 45%, #f5f8f180 0%, transparent 65%),
-    repeating-radial-gradient(ellipse at 108% -12%, transparent 0 38px, #2b674d17 38px 39px, transparent 40px 54px);
-  mask-image: linear-gradient(115deg, #0004 4%, #000 86%);
+  opacity: .032;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 }
+
 .preferencia-fundo {
   display: flex;
   align-items: center;
@@ -23,10 +37,128 @@ body::before {
 .preferencia-fundo:hover { background: #ffffff14; }
 .preferencia-fundo input { width: auto; accent-color: var(--brotos); }
 
+/* Intro Cinemática com a Logo */
+.intro-flora {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--marfim);
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 42%, #204d3c 0%, #143329 72%),
+    var(--floresta);
+  cursor: pointer;
+  overflow: hidden;
+}
+.intro-flora::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .16;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='600' viewBox='0 0 900 600' fill='none'%3E%3Cg stroke='%23DDE8D3' stroke-width='1'%3E%3Cpath d='M-40 420C140 320 310 510 500 390C690 270 810 170 960 220'/%3E%3Cpath d='M-40 480C160 370 340 555 530 435C720 315 840 225 960 275'/%3E%3Cpath d='M80 -30C210 120 420 140 560 40C700 -50 820 20 940 130'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: cover;
+}
+.intro-conteudo {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+}
+.intro-emblema {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 122px;
+  height: 122px;
+}
+.intro-anel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.intro-anel circle {
+  fill: none;
+  stroke: var(--brotos);
+  stroke-width: 1.4;
+  stroke-dasharray: 346;
+  stroke-dashoffset: 346;
+  opacity: .75;
+}
+.intro-logo {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  border-radius: 18px;
+  clip-path: inset(7% round 14%);
+  box-shadow: 0 12px 32px #07181255;
+}
+.intro-titulo-caixa {
+  overflow: hidden;
+  padding-inline: 8px;
+}
+.intro-titulo {
+  display: block;
+  font: 500 clamp(1.75rem, 3.6vw, 2.55rem) Georgia, "Times New Roman", serif;
+  letter-spacing: -.02em;
+  color: #fffdf9;
+}
+.intro-traco {
+  width: 56px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--brotos), transparent);
+}
+.intro-subtitulo {
+  font-size: .78rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #c9d9ca;
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  .fundo-animado::before { animation: luz-do-fundo 16s ease-in-out infinite alternate; }
-  .entrada-tela { animation: entrada-tela var(--duracao-tela) var(--curva); }
+  .intro-flora {
+    transition: opacity 420ms var(--curva), transform 420ms var(--curva);
+  }
+  .intro-flora.intro-saindo {
+    opacity: 0;
+    transform: scale(1.025);
+    pointer-events: none;
+  }
+  .intro-anel circle {
+    animation: intro-desenhar-anel 820ms var(--curva) 80ms forwards;
+  }
+  .intro-logo {
+    animation: intro-revelar-logo 680ms var(--curva) both;
+  }
+  .intro-titulo {
+    animation: intro-subir-texto 620ms var(--curva) 180ms both;
+  }
+  .intro-traco {
+    animation: intro-abrir-traco 540ms var(--curva) 320ms both;
+  }
+  .intro-subtitulo {
+    animation: intro-aparecer-suave 520ms var(--curva) 380ms both;
+  }
+
+  /* Luz solar filtrada por copa no modo Animar fundo */
+  .fundo-animado::before {
+    animation: luz-copa 18s ease-in-out infinite alternate;
+  }
+
+  /* Entrada coreografada em cascata (stagger) */
+  .entrada-tela > * {
+    animation: entrada-tela var(--duracao-tela) var(--curva) both;
+  }
+  .entrada-tela > :nth-child(2) { animation-delay: 45ms; }
+  .entrada-tela > :nth-child(3) { animation-delay: 85ms; }
   #status:not([hidden]) { animation: entrada-tela var(--duracao-botao) var(--curva); }
+
+  /* Transições contidas e táteis */
   .botao,
   .barra-app button,
   .barra-app summary,
@@ -37,18 +169,25 @@ body::before {
       border-color var(--duracao-botao) var(--curva),
       color var(--duracao-botao) var(--curva),
       box-shadow var(--duracao-botao) var(--curva),
-      transform var(--duracao-botao) var(--curva);
+      opacity var(--duracao-botao) var(--curva),
+      transform 120ms var(--curva);
   }
   .cartao,
   .editor,
-  .indicador-card,
   .cartao-proposta-item,
-  .item-agenda {
+  .item-agenda,
+  .indicadores-secundarios > div,
+  .item-ranking,
+  .funil-linha {
     transition:
       background-color var(--duracao-cartao) var(--curva),
       border-color var(--duracao-cartao) var(--curva),
       box-shadow var(--duracao-cartao) var(--curva),
-      transform var(--duracao-cartao) var(--curva);
+      opacity var(--duracao-cartao) var(--curva);
+  }
+  .editor::before,
+  .acoes-item {
+    transition: opacity var(--duracao-botao) var(--curva), transform var(--duracao-botao) var(--curva);
   }
   .barra-preenchimento,
   .barra-proporcao-interna,
@@ -62,32 +201,78 @@ body::before {
   .preco-atualizado {
     animation: pulso-preco var(--duracao-numero) var(--curva);
   }
+
+  /* Nova gramática de Hover (Zero pulo genérico) */
   @media (hover: hover) {
-    .botao:not(:disabled):hover {
-      box-shadow: 0 4px 12px #153c3024;
-      transform: translateY(-1px);
-    }
+    /* Compressão tátil no clique */
     .botao:not(:disabled):active {
-      transform: translateY(0);
+      transform: scale(0.985);
     }
-    .editor:hover {
-      background-color: #f3f7ef;
-      border-color: #b5cbb9;
+
+    /* Botão primário com brilho especular sutil */
+    .botao:not(.secundario) {
+      position: relative;
+      overflow: hidden;
     }
+    .botao:not(.secundario)::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 20%, #ffffff26 50%, transparent 80%);
+      transform: translateX(-120%);
+      transition: transform 420ms var(--curva);
+      pointer-events: none;
+    }
+    .botao:not(.secundario):not(:disabled):hover::after {
+      transform: translateX(120%);
+    }
+
+    /* Linhas editáveis: filete lateral esquerdo + ações sob demanda */
+    .cartao-editor .editor .acoes-item {
+      opacity: .46;
+    }
+    .cartao-editor .editor:hover,
+    .cartao-editor .editor:focus-within {
+      background-color: #fbf9f2;
+      border-color: #c8c5b6;
+    }
+    .cartao-editor .editor:hover .acoes-item,
+    .cartao-editor .editor:focus-within .acoes-item {
+      opacity: 1;
+    }
+    .cartao-editor .editor:hover::before,
+    .cartao-editor .editor:focus-within::before {
+      opacity: 1;
+      transform: scaleY(1);
+    }
+
+    /* Cartões interativos: iluminação de superfície + definição de borda */
     details.cartao:hover,
-    .cartao-interativo:hover,
     .catalogo-modelos .cartao:hover,
-    .indicadores-secundarios > div:hover,
     .cartao-proposta-item:hover,
-    .item-agenda:hover {
+    .item-agenda:hover,
+    .indicadores-secundarios > div:hover {
       border-color: var(--salvia);
+      background-color: #fffefb;
       box-shadow: var(--sombra-elevada);
-      transform: translateY(-2px);
+    }
+    .catalogo-modelos .cartao:hover .icone-modelo {
+      background: var(--floresta);
+      color: var(--marfim);
+    }
+
+    /* Foco comparativo nas barras de ranking e funil */
+    .ranking-barras:hover .item-ranking:not(:hover) {
+      opacity: .52;
+    }
+    .cartao:has(.funil-linha):hover .funil-linha:not(:hover) {
+      opacity: .58;
     }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .intro-flora { display: none !important; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -96,24 +281,44 @@ body::before {
   }
 }
 
-@keyframes luz-do-fundo {
-  from { opacity: .48; }
-  to { opacity: .96; }
+@keyframes intro-desenhar-anel {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes intro-revelar-logo {
+  from { opacity: 0; transform: scale(.86); filter: blur(6px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+@keyframes intro-subir-texto {
+  from { opacity: 0; transform: translateY(105%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes intro-abrir-traco {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+@keyframes intro-aparecer-suave {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes luz-copa {
+  0% { filter: brightness(1) saturate(1); }
+  50% { filter: brightness(1.03) saturate(1.05); }
+  100% { filter: brightness(.99) saturate(.98); }
 }
 @keyframes entrada-tela {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes expandir-detalhes {
-  from { opacity: 0; transform: translateY(-4px); }
+  from { opacity: 0; transform: translateY(-3px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes preencher-barra {
-  from { transform: scaleX(0.15); transform-origin: left; }
+  from { transform: scaleX(0.18); transform-origin: left; }
   to { transform: scaleX(1); transform-origin: left; }
 }
 @keyframes pulso-preco {
-  0% { box-shadow: 0 0 0 0 #2b674d38; }
-  50% { box-shadow: 0 0 0 6px #2b674d00; }
+  0% { box-shadow: 0 0 0 0 #b88a4444; }
+  60% { box-shadow: 0 0 0 6px #b88a4400; }
   100% { box-shadow: 0 0 0 0 transparent; }
 }

@@ -1,45 +1,60 @@
 :root {
   color-scheme: light;
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-  color: #1c3329;
-  background: #edf3e8;
-  --floresta: #153c30;
-  --folhagem: #2b674d;
-  --salvia: #78a788;
-  --brotos: #ddebcf;
-  --marfim: #f5f8f1;
+  color: #1b2b25;
+  background: #f4f2ec;
+
+  /* Paleta Atelier Botânico & Prancheta Técnica */
+  --floresta: #143329;
+  --folhagem: #275b44;
+  --salvia: #769d83;
+  --brotos: #dde8d3;
+  --marfim: #faf8f2;
+  --papel-fundo: #f4f2ec;
+  --superficie: #fffdf9;
+  --terracota: #b0623e;
+  --ocre: #b88a44;
+
+  /* Aliases semânticos */
   --papel: var(--marfim);
   --lima-claro: var(--brotos);
   --verde: var(--folhagem);
-  --verde-escuro: #1d4c38;
-  --borda: #CFDDCF;
-  --borda-forte: #9ab8a4;
-  --suave: #4a6356;
-  --alerta-fundo: #fef4ec;
-  --alerta-borda: #e4b48f;
-  --alerta-texto: #7c3814;
-  --raio: 14px;
-  --raio-curto: 9px;
-  --largura-app: 1360px;
-  --recuo-app: clamp(14px, 3vw, 38px);
-  --sombra: 0 2px 4px #153c300a, 0 12px 28px #153c300d;
-  --sombra-elevada: 0 8px 20px #153c3014, 0 20px 42px #153c301a;
+  --verde-escuro: #1a4032;
+  --borda: #dedbd0;
+  --borda-forte: #b8b5a6;
+  --suave: #526158;
+  --alerta-fundo: #fbf2ec;
+  --alerta-borda: #d8a389;
+  --alerta-texto: #7d3618;
+
+  /* Métricas e elevação contida */
+  --raio: 11px;
+  --raio-curto: 7px;
+  --largura-app: 1380px;
+  --recuo-app: clamp(14px, 2.8vw, 38px);
+  --sombra: 0 1px 2px #14332908, 0 8px 24px #14332909;
+  --sombra-elevada: 0 2px 6px #1433290d, 0 14px 32px #14332912;
+
+  /* Linguagem de movimento */
   --duracao-botao: 170ms;
-  --duracao-cartao: 200ms;
-  --duracao-tela: 250ms;
+  --duracao-cartao: 210ms;
+  --duracao-tela: 260ms;
   --duracao-detalhes: 210ms;
-  --duracao-numero: 350ms;
+  --duracao-numero: 340ms;
   --curva: cubic-bezier(0.22, 1, 0.36, 1);
   --transicao: var(--duracao-botao) var(--curva);
 }
+
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  background-color: #edf3e8;
-  color: #1c3329;
+  background-color: var(--papel-fundo);
+  color: #1b2b25;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 main {
   width: 100%;
@@ -51,24 +66,24 @@ main {
 h1, h2, h3, p { margin: 0; }
 h1 {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2rem, 3.6vw, 3.15rem);
+  font-size: clamp(1.9rem, 3.2vw, 2.85rem);
   line-height: 1.08;
   font-weight: 500;
-  letter-spacing: -.035em;
+  letter-spacing: -.03em;
   color: var(--floresta);
   overflow-wrap: anywhere;
 }
 h2 {
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 650;
-  letter-spacing: -.01em;
+  letter-spacing: -.012em;
   color: var(--floresta);
 }
 h3 {
-  font-size: .88rem;
-  font-weight: 650;
+  font-size: .78rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: .07em;
   color: var(--suave);
 }
 p { line-height: 1.55; }
@@ -76,6 +91,6 @@ button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
 [hidden] { display: none !important; }
 :focus-visible {
-  outline: 3px solid var(--folhagem);
+  outline: 2px solid var(--folhagem);
   outline-offset: 2px;
 }
