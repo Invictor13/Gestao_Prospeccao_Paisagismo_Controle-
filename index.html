@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Flora em Folha | Gestão para paisagistas</title>
   <link rel="icon" type="image/png" href="assets/flora-em-folha.png">
-  <link rel="stylesheet" href="css/base.css?v=3.5">
-  <link rel="stylesheet" href="css/componentes.css?v=3.5">
-  <link rel="stylesheet" href="css/movimento.css?v=3.5">
-  <link rel="stylesheet" href="css/proposta.css?v=3.5">
-  <link rel="stylesheet" href="css/experiencia.css?v=3.5">
-  <link rel="stylesheet" href="css/espaco-trabalho.css?v=3.5">
+  <link rel="stylesheet" href="css/base.css?v=4.6">
+  <link rel="stylesheet" href="css/componentes.css?v=4.6">
+  <link rel="stylesheet" href="css/movimento.css?v=4.6">
+  <link rel="stylesheet" href="css/proposta.css?v=4.6">
+  <link rel="stylesheet" href="css/experiencia.css?v=4.6">
+  <link rel="stylesheet" href="css/espaco-trabalho.css?v=4.6">
   <script defer src="js/dados/modelo-inicial.js"></script>
   <script defer src="js/dados/comercial.js"></script>
   <script defer src="js/dominio/custos.js"></script>
@@ -53,10 +53,15 @@
       <button type="button" data-tela="orcamento">Orçamento</button>
       <button type="button" data-tela="etapas">Etapas do projeto</button>
       <button type="button" data-tela="custos">Custos da operação</button>
-      <button type="button" data-tela="historico">Orçamentos salvos</button>
-      <button type="button" data-tela="clientes">Clientes</button>
-      <button type="button" data-tela="retornos">Próximos contatos</button>
-      <button type="button" data-tela="modelos">Modelos de serviço</button>
+      <details class="menu-grupo" id="menu-gestao">
+        <summary>Gestão</summary>
+        <div class="submenu-nav">
+          <button type="button" data-tela="historico">Orçamentos salvos</button>
+          <button type="button" data-tela="clientes">Clientes</button>
+          <button type="button" data-tela="retornos">Próximos contatos</button>
+          <button type="button" data-tela="modelos">Modelos de serviço</button>
+        </div>
+      </details>
     </nav>
     <details class="ferramentas" id="ferramentas-sistema">
       <summary>Ferramentas</summary>
@@ -78,8 +83,10 @@
       <p><strong>Modo demonstração.</strong> Use somente dados fictícios. As alterações desta aba são descartadas ao recarregar.</p>
       <a href="index.html">Abrir ambiente local</a>
     </div>
-    <p id="status" role="status" hidden></p>
-    <button id="tentar-gravar" class="botao secundario" type="button" hidden>Tentar gravar novamente</button>
+    <div class="toast-camada">
+      <p id="status" role="status" hidden></p>
+      <button id="tentar-gravar" class="botao secundario" type="button" hidden>Tentar gravar novamente</button>
+    </div>
     <section id="conteudo"></section>
   </main>
   <footer class="rodape-app">

@@ -156,7 +156,13 @@ body::after {
   }
   .entrada-tela > :nth-child(2) { animation-delay: 45ms; }
   .entrada-tela > :nth-child(3) { animation-delay: 85ms; }
-  #status:not([hidden]) { animation: entrada-tela var(--duracao-botao) var(--curva); }
+  #status:not([hidden]) { animation: toast-entrar 220ms var(--curva); }
+  .gaveta-lateral[open] { animation: gaveta-entrar 240ms var(--curva); }
+  .gaveta-lateral[open]::backdrop { animation: fade-backdrop 220ms ease-out; }
+  .gaveta-lateral.gaveta-fechando { animation: gaveta-sair 200ms var(--curva) forwards; }
+  .gaveta-lateral.gaveta-fechando::backdrop { opacity: 0; transition: opacity 180ms ease-out; }
+  .item-despesa-gaveta.item-novo { animation: entrada-tela 220ms var(--curva); }
+  .editor-inline-gaveta { animation: expandir-detalhes 200ms var(--curva); }
 
   /* Transições contidas e táteis */
   .botao,
@@ -261,6 +267,15 @@ body::after {
       color: var(--marfim);
     }
 
+    .card-categoria-custo {
+      transition: transform 180ms var(--curva), border-color 180ms var(--curva), box-shadow 180ms var(--curva), background-color 180ms var(--curva);
+    }
+    .card-categoria-custo:hover {
+      transform: translateY(-2px);
+      border-color: var(--salvia);
+      background-color: var(--superficie);
+      box-shadow: var(--sombra-elevada);
+    }
     /* Foco comparativo nas barras de ranking e funil */
     .ranking-barras:hover .item-ranking:not(:hover) {
       opacity: .52;
@@ -308,6 +323,22 @@ body::after {
 @keyframes entrada-tela {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-entrar {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes gaveta-entrar {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes gaveta-sair {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100%); }
+}
+@keyframes fade-backdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes expandir-detalhes {
   from { opacity: 0; transform: translateY(-3px); }
