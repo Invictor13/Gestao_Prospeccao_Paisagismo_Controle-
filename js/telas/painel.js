@@ -32,6 +32,48 @@ Paisagismo.telaPainel = (ctx) => {
     contagens.append(indicador);
   }
 
+  /* 4 Cards temáticos e minimalistas de cadastros salvos */
+  const totalClientes = ctx.dados.clientes.length;
+  const totalOrcamentos = ctx.dados.salvos.filter((item) => item !== ctx.versaoPendente).length;
+  const totalContatos = ctx.dados.salvos.filter(
+    (item) => item !== ctx.versaoPendente && item.acompanhamento.proximo
+      && !["Aprovada", "Recusada"].includes(item.acompanhamento.situacao),
+  ).length;
+  const totalServicos = ctx.dados.modelos.length;
+
+  const atalhos = ui.elemento("section", undefined, "atalhos-painel");
+  atalhos.setAttribute("aria-label", "Resumo de cadastros salvos");
+  const cartoesResumo = [
+    ["clientes", "Clientes", totalClientes, totalClientes === 1 ? "cliente salvo" : "clientes salvos"],
+    ["historico", "Orçamentos", totalOrcamentos, totalOrcamentos === 1 ? "orçamento salvo" : "orçamentos salvos"],
+    ["retornos", "Contatos", totalContatos, totalContatos === 1 ? "retorno agendado" : "retornos agendados"],
+    ["modelos", "Serviços", totalServicos, totalServicos === 1 ? "modelo disponível" : "modelos disponíveis"],
+  ];
+  for (const [destino, tituloCard, qtd, legenda] of cartoesResumo) {
+    const card = ui.elemento("button", undefined, "cartao card-resumo-modulo");
+    card.type = "button";
+    card.dataset.modulo = destino;
+    card.addEventListener("click", () => ctx.navegar(destino));
+
+    const topoCard = ui.elemento("div", undefined, "topo-resumo-modulo");
+    const icone = ui.elemento("span", undefined, "icone-resumo-modulo");
+    icone.dataset.modulo = destino;
+    icone.setAttribute("aria-hidden", "true");
+    const seta = ui.elemento("span", "↗", "seta-card-categoria");
+    seta.setAttribute("aria-hidden", "true");
+    topoCard.append(icone, seta);
+
+    const corpoCard = ui.elemento("div", undefined, "corpo-resumo-modulo");
+    const numEl = ui.elemento("strong", undefined, "numero-resumo-modulo");
+    ui.animarNumero(numEl, ui.numero(qtd));
+    const textos = ui.elemento("div", undefined, "textos-resumo-modulo");
+    textos.append(ui.elemento("span", tituloCard), ui.elemento("small", legenda));
+    corpoCard.append(textos, numEl);
+
+    card.append(topoCard, corpoCard);
+    atalhos.append(card);
+  }
+
   const total = painel.funil.reduce((soma, [, quantidade]) => soma + quantidade, 0);
   const funil = painel.funil.map(([situacao, quantidade]) => {
     const linha = ui.elemento("div", undefined, "funil-linha");
@@ -70,7 +112,7 @@ Paisagismo.telaPainel = (ctx) => {
   const painelCompleto = ui.elemento("div", undefined, "pilha painel-espaco");
   const inicio = ui.elemento("div", undefined, "painel-inicio");
   inicio.append(destaque, contagens);
-  painelCompleto.append(inicio, area);
+  painelCompleto.append(inicio, atalhos, area);
   if (painel.recentes.length) {
     const recentes = painel.recentes.slice(0, 3).map((item) => {
       const registro = ui.elemento("div", undefined, "linha cartao-proposta-item");

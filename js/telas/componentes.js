@@ -124,6 +124,84 @@ Paisagismo.ui = (() => {
     return bloco;
   }
 
+  function abrirGaveta(ancora, tituloInicial, conteudo, opcoes = {}) {
+    const modal = elemento("dialog", undefined, "gaveta-lateral");
+    modal.setAttribute("aria-label", tituloInicial);
+    if (opcoes.classe) modal.classList.add(opcoes.classe);
+
+    let fechando = false;
+    const fecharComAnimacao = () => {
+      if (fechando) return;
+      fechando = true;
+      if (window.matchMedia?.("(prefers-reduced-motion: no-preference)").matches) {
+        modal.classList.add("gaveta-fechando");
+        window.setTimeout?.(() => { if (modal.open) modal.close(); }, 200);
+      } else if (modal.open) {
+        modal.close();
+      }
+    };
+
+    const btnFechar = botao("×", fecharComAnimacao, true);
+    btnFechar.className = "gaveta-fechar-x";
+    btnFechar.setAttribute("aria-label", "Fechar painel lateral");
+
+    const topo = elemento("header", undefined, "gaveta-topo");
+    let tituloEl;
+    let subtituloEl;
+    if (opcoes.cabecalhoPersonalizado) {
+      topo.classList.add("gaveta-topo-destaque");
+      const linhaTopo = elemento("div", undefined, "gaveta-topo-linha");
+      linhaTopo.append(opcoes.cabecalhoPersonalizado, btnFechar);
+      topo.append(linhaTopo);
+    } else {
+      tituloEl = elemento("h2", tituloInicial);
+      subtituloEl = elemento("p", opcoes.subtitulo || "", "gaveta-subtitulo");
+      subtituloEl.hidden = !opcoes.subtitulo;
+      const blocoTitulo = elemento("div", undefined, "gaveta-titulos");
+      blocoTitulo.append(tituloEl, subtituloEl);
+      topo.append(blocoTitulo, btnFechar);
+    }
+
+    const corpo = elemento("div", undefined, "gaveta-corpo");
+    corpo.append(conteudo);
+    modal.append(topo, corpo);
+    if (opcoes.rodape) {
+      const rodape = elemento("footer", undefined, "gaveta-rodape");
+      rodape.append(opcoes.rodape);
+      modal.append(rodape);
+    }
+
+    modal.addEventListener("cancel", (evento) => {
+      if (window.matchMedia?.("(prefers-reduced-motion: no-preference)").matches && !fechando) {
+        evento.preventDefault();
+        fecharComAnimacao();
+      }
+    });
+    modal.addEventListener("click", (evento) => {
+      if (evento.target === modal) fecharComAnimacao();
+    });
+    modal.addEventListener("close", () => {
+      modal.remove();
+      ancora?.focus?.();
+      opcoes.aoFechar?.();
+    });
+
+    (document.body || ancora.parentElement).append(modal);
+    modal.showModal();
+    return {
+      modal,
+      fechar: fecharComAnimacao,
+      atualizarCabecalho(novoTitulo, novoSubtitulo = "") {
+        modal.setAttribute("aria-label", novoTitulo);
+        if (tituloEl) tituloEl.textContent = novoTitulo;
+        if (subtituloEl) {
+          subtituloEl.textContent = novoSubtitulo;
+          subtituloEl.hidden = !novoSubtitulo;
+        }
+      },
+    };
+  }
+
   function abrirDialogo(ancora, titulo, conteudo) {
     const modal = elemento("dialog", undefined, "dialogo-edicao");
     modal.setAttribute("aria-label", titulo);
@@ -173,14 +251,15 @@ Paisagismo.ui = (() => {
     lista.setAttribute("role", "group");
     lista.setAttribute("aria-label", colunas.join(" · "));
     let atualizarBarrasVisiveis = () => {};
-    let termoBusca = "";
-    let filtroPeriodo = "";
+    let termoBusca = opcoes.buscaInicial ?? "";
+    let filtroCategoria = opcoes.categoriaInicial ?? "";
     const normalizar = (t) => String(t || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
     const obterFiltrados = () => itens
       .map((item, indice) => ({ item, indice }))
       .filter(({ item }) => {
-        if (termoBusca && !normalizar(item[0] + " " + (item[3] || "")).includes(termoBusca)) return false;
-        if (filtroPeriodo && (item[2] ?? "mensal") !== filtroPeriodo) return false;
+        const cat = opcoes.tipo === "custo" ? Paisagismo.comercial.categoriaCusto(item) : (item[3] || "").trim();
+        if (termoBusca && !normalizar(item[0] + " " + cat).includes(termoBusca)) return false;
+        if (filtroCategoria && cat !== filtroCategoria) return false;
         return true;
       });
 
@@ -192,22 +271,24 @@ Paisagismo.ui = (() => {
       if (atualizar()) {
         desfazer.hidden = true;
         termoBusca = "";
-        filtroPeriodo = "";
+        filtroCategoria = "";
         if (campoBusca) campoBusca.value = "";
-        if (seletorPeriodo) seletorPeriodo.value = "";
+        atualizarBotoesCategoria();
         paginacao.mostrar(itens.length, indice);
         lista.children[paginacao.paginaDe(indice)]?.querySelector("textarea")?.focus();
       } else itens.splice(indice, 1);
     }, true);
     desfazer.hidden = true;
     const adicionar = botao("+ Adicionar item", () => {
-      itens.push(["Novo item", 0]);
+      const novoItem = opcoes.tipo === "custo"
+        ? ["Novo item", 0, "mensal", filtroCategoria || "Escritório"]
+        : ["Novo item", 0];
+      itens.push(novoItem);
       if (atualizar()) {
         termoBusca = "";
-        filtroPeriodo = "";
         if (campoBusca) campoBusca.value = "";
-        if (seletorPeriodo) seletorPeriodo.value = "";
-        paginacao.mostrar(itens.length, itens.length - 1);
+        const filtrados = obterFiltrados();
+        paginacao.mostrar(filtrados.length, filtrados.length - 1);
         const novo = lista.lastElementChild?.querySelector("textarea");
         novo?.focus();
         novo?.select();
@@ -221,7 +302,7 @@ Paisagismo.ui = (() => {
         for (const fn of atualizadoresLinha) fn();
       };
       const filtrados = obterFiltrados();
-      if (!filtrados.length && (termoBusca || filtroPeriodo)) {
+      if (!filtrados.length && (termoBusca || filtroCategoria)) {
         lista.replaceChildren(elemento("p", "Nenhum item encontrado para o filtro informado."));
         return;
       }
@@ -237,6 +318,12 @@ Paisagismo.ui = (() => {
             const divisor = meses[item[2] ?? "mensal"] || 1;
             equivalenteMensal.value = reais.format((Number(item[1]) || 0) / divisor);
           }
+          if (opcoes.tipo === "despesa") {
+            const zerado = (Number(item[1]) || 0) * (Number(item[2] ?? 1) || 1) <= 0;
+            if (zerado) grupo.dataset.zerado = "true";
+            else delete grupo.dataset.zerado;
+          }
+          aoAtualizarDespesa?.();
           atualizarBarrasVisiveis();
         };
         function editar(coluna, valor) {
@@ -268,11 +355,35 @@ Paisagismo.ui = (() => {
         const numeroBadge = elemento("span", String(indice + 1).padStart(2, "0"), "indice-item");
         numeroBadge.setAttribute("aria-hidden", "true");
         const nome = elemento("div", undefined, "nome-item");
-        const detalhes = botao("Detalhes", () => {
-          modal = abrirDialogo(detalhes, "Detalhes de " + (item[0] || "item"), extras);
+        const ehTraslado = opcoes.tipo === "despesa"
+          && /traslado|deslocamento|combust|gasolina|viagem/i.test(item[0] || "");
+        const rotuloDetalhes = ehTraslado ? "km / R$" : "Detalhes";
+        const detalhes = botao(rotuloDetalhes, () => {
+          if (opcoes.tipo === "despesa") {
+            const headerDesp = elemento("div", undefined, "gaveta-header-verde");
+            const titDesp = elemento("h2", item[0] || "Despesa", "gaveta-titulo-categoria");
+            const subDesp = elemento("strong", reais.format(item[1] * (item[2] ?? 1)), "gaveta-total-mensal valor-financeiro");
+            headerDesp.append(titDesp, subDesp);
+            const atualizarHeaderDesp = () => {
+              titDesp.textContent = item[0] || "Despesa";
+              mostrarValor(subDesp, reais.format(item[1] * (item[2] ?? 1)));
+            };
+            aoAtualizarDespesa = atualizarHeaderDesp;
+            modal = abrirGaveta(detalhes, item[0] || "Despesa", extras, {
+              classe: "gaveta-custos-v2",
+              cabecalhoPersonalizado: headerDesp,
+              aoFechar() { aoAtualizarDespesa = null; },
+            });
+          } else {
+            modal = abrirDialogo(detalhes, "Detalhes de " + (item[0] || "item"), extras);
+          }
         }, true);
         detalhes.classList.add("botao-detalhes-item");
-        const extras = elemento("div", undefined, "formulario-comercial detalhes-formulario");
+        if (ehTraslado) detalhes.classList.add("botao-traslado-atalho");
+        let aoAtualizarDespesa = null;
+        const extras = elemento("div", undefined, "pilha");
+        const camposExtras = elemento("div", undefined, "formulario-comercial detalhes-formulario");
+        extras.append(camposExtras);
         let modal;
         const nomeDetalhes = () => {
           detalhes.setAttribute("aria-label", "Detalhes de " + (item[0] || "item " + (indice + 1)));
@@ -289,6 +400,8 @@ Paisagismo.ui = (() => {
         texto.rows = 1;
         nome.append(texto);
         cabecalhoItem.append(numeroBadge, nome);
+
+        const campoValor = entrada(unidade + " do item " + (indice + 1), item[1], (v) => editar(1, v));
 
         if (opcoes.tipo === "etapa") {
           const barra = elemento("div", undefined, "barra-proporcao barra-proporcao-base");
@@ -313,8 +426,8 @@ Paisagismo.ui = (() => {
           cabecalhoItem.append(etiqueta);
           atualizarMeta = () => {
             const p = item[2] && item[2] !== "mensal" ? (item[2] === "anual" ? "Anual" : "Trim.") : "";
-            const cat = item[3] || "";
-            const info = [p, cat].filter(Boolean).join(" · ");
+            const cat = Paisagismo.comercial.categoriaCusto(item);
+            const info = [p, filtroCategoria ? "" : cat].filter(Boolean).join(" · ");
             etiqueta.textContent = info;
             etiqueta.hidden = !info;
           };
@@ -324,25 +437,94 @@ Paisagismo.ui = (() => {
         const acoesItem = elemento("div", undefined, "acoes-item");
         if (opcoes.tipo || opcoes.ordenar) acoesItem.append(detalhes);
         acoesItem.append(remover);
-        grupo.append(cabecalhoItem, entrada(unidade + " do item " + (indice + 1), item[1], (v) => editar(1, v)), acoesItem);
+        grupo.append(cabecalhoItem, campoValor, acoesItem);
 
         if (opcoes.tipo || opcoes.ordenar) {
           if (opcoes.tipo === "despesa") {
             subtotal = elemento("output");
             atualizarSubtotal();
-            extras.append(campo("Quantidade", item[2] ?? 1, (v) => editar(2, v)),
-              campo("Unidade", item[3] ?? "", (v) => editar(3, v)),
-              rotuloValor("Subtotal do item", subtotal));
+            const campoQtd = campo("Quantidade", item[2] ?? 1, (v) => editar(2, v));
+            const campoUnidade = campo("Unidade / observação", item[3] ?? "", (v) => editar(3, v));
+            camposExtras.append(campoQtd, campoUnidade, rotuloValor("Subtotal do item", subtotal));
+
+            /* Calculadora de deslocamento exclusiva para Traslado / deslocamento */
+            if (opcoes.ctx && ehTraslado) {
+              const projetoAtual = opcoes.ctx.dados.projeto;
+              const padrao = opcoes.ctx.dados.deslocamentoPadrao;
+              const t = projetoAtual.traslado;
+              if (!t.combustivel && padrao.combustivel) t.combustivel = padrao.combustivel;
+              if (!t.consumo && padrao.consumo) t.consumo = padrao.consumo;
+
+              const calcBloco = elemento("details", undefined, "cartao calculadora-traslado");
+              if (ehTraslado) calcBloco.open = true;
+              calcBloco.append(elemento("summary", "Calculadora de deslocamento (km e combustível)"));
+              const calcGrade = elemento("div", undefined, "formulario-comercial");
+              const resumoCalc = elemento("p", "", "resumo-traslado");
+              const atualizarResumoCalc = () => {
+                const res = Paisagismo.comercial.calcularTraslado(t);
+                resumoCalc.textContent = numeros.format(res.distanciaTotal) + " km totais · "
+                  + numeros.format(Math.round(res.litros * 100) / 100) + " L estimados · Total: "
+                  + reais.format(res.valor);
+                return res;
+              };
+              const chkIdaVolta = elemento("input");
+              chkIdaVolta.type = "checkbox";
+              chkIdaVolta.checked = t.idaVolta !== false;
+              chkIdaVolta.addEventListener("change", () => {
+                t.idaVolta = chkIdaVolta.checked;
+                atualizarResumoCalc();
+              });
+              const editarTraslado = (chave) => (v) => {
+                t[chave] = v;
+                atualizarResumoCalc();
+                return true;
+              };
+              calcGrade.append(
+                campo("Distância do trecho (km)", t.km, editarTraslado("km"), 0),
+                campo("Quantidade de visitas", t.visitas, editarTraslado("visitas"), 1),
+                campo("Consumo do veículo (km/L)", t.consumo, editarTraslado("consumo"), 0.5),
+                campo("Preço do combustível (R$/L)", t.combustivel, editarTraslado("combustivel"), 0),
+                campo("Pedágio / estacionamento (R$)", t.pedagio, editarTraslado("pedagio"), 0),
+                Paisagismo.telasComerciais.rotular("Considerar ida e volta (×2)", chkIdaVolta),
+              );
+              const aplicarCalc = botao("Aplicar valor calculado", () => {
+                const res = atualizarResumoCalc();
+                padrao.consumo = t.consumo;
+                padrao.combustivel = t.combustivel;
+                const nota = numeros.format(res.distanciaTotal) + " km · " + reais.format(t.combustivel) + "/L";
+                item[2] = 1;
+                item[3] = nota;
+                if (editar(1, res.valor)) {
+                  campoValor.value = String(res.valor).replace(".", ",");
+                  const inputQtd = campoQtd.querySelector("input");
+                  const inputUn = campoUnidade.querySelector("input");
+                  if (inputQtd) inputQtd.value = "1";
+                  if (inputUn) inputUn.value = nota;
+                  opcoes.ctx.status("Traslado calculado e aplicado: " + reais.format(res.valor) + ".");
+                }
+              });
+              atualizarResumoCalc();
+              calcBloco.append(calcGrade, resumoCalc, aplicarCalc);
+              extras.append(calcBloco);
+            }
           }
           if (opcoes.tipo === "custo") {
             const comercial = Paisagismo.telasComerciais;
             const periodos = [["mensal", "Mensal"], ["trimestral", "Trimestral"], ["anual", "Anual"]];
+            const baseCats = Paisagismo.comercial.categoriasCusto;
+            const catAtual = Paisagismo.comercial.categoriaCusto(item);
+            const opcoesCat = [
+              ...baseCats.map((c) => [c, c]),
+              ...(catAtual && !baseCats.includes(catAtual) && catAtual !== "Outros" ? [[catAtual, catAtual]] : []),
+              ["Outros", "Outros"],
+            ];
             equivalenteMensal = elemento("output");
             atualizarSubtotal();
-            extras.append(
+            camposExtras.append(
               comercial.rotular("Periodicidade", comercial.seletor("Periodicidade", periodos,
                 item[2] ?? "mensal", (v) => editar(2, v))),
-              campo("Categoria", item[3] ?? "", (v) => editar(3, v)),
+              comercial.rotular("Categoria", comercial.seletor("Categoria", opcoesCat,
+                catAtual, (v) => editar(3, v))),
               rotuloValor("Custo mensal equivalente", equivalenteMensal),
             );
           }
@@ -351,7 +533,7 @@ Paisagismo.ui = (() => {
             publico.type = "checkbox";
             publico.checked = item[4] === true;
             publico.addEventListener("change", () => editar(4, publico.checked));
-            extras.append(campo("Descrição para a proposta", item[2] ?? "", (v) => editar(2, v)),
+            camposExtras.append(campo("Descrição para a proposta", item[2] ?? "", (v) => editar(2, v)),
               campo("Responsável", item[3] ?? "", (v) => editar(3, v)),
               Paisagismo.telasComerciais.rotular("Incluir entre os entregáveis", publico));
           }
@@ -366,8 +548,8 @@ Paisagismo.ui = (() => {
               paginacao.mostrar(itens.length, destino);
               lista.children[paginacao.paginaDe(destino)]?.querySelector("textarea")?.focus();
             };
-            if (indice > 0) extras.append(botao("Mover acima", () => mover(indice - 1), true));
-            if (indice < itens.length - 1) extras.append(botao("Mover abaixo", () => mover(indice + 1), true));
+            if (indice > 0) camposExtras.append(botao("Mover acima", () => mover(indice - 1), true));
+            if (indice < itens.length - 1) camposExtras.append(botao("Mover abaixo", () => mover(indice + 1), true));
           }
         }
         return grupo;
@@ -376,12 +558,20 @@ Paisagismo.ui = (() => {
     }
 
     let campoBusca;
-    let seletorPeriodo;
+    const botoesCat = [];
+    const atualizarBotoesCategoria = () => {
+      for (const { btn, chave } of botoesCat) {
+        btn.setAttribute("aria-pressed", String(filtroCategoria === chave));
+      }
+    };
+
     const topo = elemento("div", undefined, "editor-topo");
     const acoes = elemento("div", undefined, "acoes");
+    let barraCategorias = null;
     if (opcoes.tipo === "custo") {
       campoBusca = elemento("input");
       campoBusca.type = "search";
+      campoBusca.value = termoBusca;
       campoBusca.placeholder = "Buscar despesa...";
       campoBusca.className = "busca-compacta";
       campoBusca.setAttribute("aria-label", "Buscar despesa da operação");
@@ -390,14 +580,32 @@ Paisagismo.ui = (() => {
         paginacao.atualizar(obterFiltrados().length, 0);
       });
       acoes.append(campoBusca);
+
+      barraCategorias = elemento("div", undefined, "filtros-categoria grupos-comerciais");
+      const cats = [["", "Todas"], ...Paisagismo.comercial.categoriasCusto.map((c) => [c, c]), ["Outros", "Outros"]];
+      for (const [chave, rotulo] of cats) {
+        const btn = botao(rotulo, () => {
+          filtroCategoria = chave;
+          atualizarBotoesCategoria();
+          paginacao.atualizar(obterFiltrados().length, 0);
+          opcoes.aoTrocarCategoria?.(chave);
+        }, true);
+        btn.classList.add("botao-filtro-cat");
+        botoesCat.push({ btn, chave });
+        barraCategorias.append(btn);
+      }
+      atualizarBotoesCategoria();
     }
+    if (opcoes.botaoVoltar) acoes.append(opcoes.botaoVoltar);
     acoes.append(desfazer, adicionar);
-    topo.append(elemento("h2", titulo), acoes);
-    paginacao.atualizar(itens.length);
-    const bloco = elemento("section", undefined, "cartao cartao-editor");
+    if (!opcoes.ocultarTitulo) topo.append(elemento("h2", titulo));
+    topo.append(acoes);
+    paginacao.atualizar(obterFiltrados().length);
+    const bloco = elemento("section", undefined, opcoes.semCartao ? "cartao-editor editor-em-gaveta" : "cartao cartao-editor");
     if (opcoes.tipo) bloco.dataset.tipo = opcoes.tipo;
     if (opcoes.colunas) lista.classList.add("lista-dupla");
-    bloco.append(topo, lista, paginacao.controles);
+    if (barraCategorias) bloco.append(topo, barraCategorias, lista, paginacao.controles);
+    else bloco.append(topo, lista, paginacao.controles);
     return bloco;
   }
 
@@ -418,7 +626,7 @@ Paisagismo.ui = (() => {
   }
 
   return { elemento, botao, cabecalho, cartao, linha, campo, editor, editar, mostrarValor, animarNumero,
-    estadoVazio, paginador, abrirDialogo,
+    estadoVazio, paginador, abrirDialogo, abrirGaveta,
     brl: (valor) => reais.format(valor),
     numero: (valor) => numeros.format(valor),
     percentual: (valor) => percentuais.format(valor) + "%" };

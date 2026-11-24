@@ -2,10 +2,10 @@ Paisagismo.telasOrcamento = (() => {
   const ui = Paisagismo.ui;
   const data = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
 
-  function resumo(projeto, hora) {
+  function resumo(projeto, hora, ctx) {
     const preco = ui.elemento("strong", undefined, "valor-financeiro");
     const subtitulo = ui.elemento("div", undefined, "subtitulo-preco");
-    const resumoHoras = ui.elemento("span");
+    const resumoHoras = ui.elemento("span", undefined, "atalhos-preco");
     const badgeMargem = ui.elemento("span", undefined, "badge-margem");
     subtitulo.append(resumoHoras, badgeMargem);
     const aviso = ui.elemento("p",
@@ -14,6 +14,8 @@ Paisagismo.telasOrcamento = (() => {
     aviso.hidden = true;
     const destaque = ui.cartao("Preço final do projeto", preco, subtitulo, aviso);
     destaque.classList.add("preco");
+
+    const fraseResumo = ui.elemento("p", "", "frase-resumo-orcamento");
 
     const definicoes = [
       ["hora", "Custo por hora", "Base operacional", "Custo mensal da operação dividido pelas horas mensais de referência."],
@@ -56,8 +58,8 @@ Paisagismo.telasOrcamento = (() => {
       return { item, rotulo };
     };
     const legCusto = criarItemLegenda("var(--salvia)", "Base");
-    const legImpostos = criarItemLegenda("#c59b5f", "Impostos");
-    const legLucro = criarItemLegenda("var(--folhagem)", "Lucro líquido");
+    const legImpostos = criarItemLegenda("var(--ocre)", "Impostos");
+    const legLucro = criarItemLegenda("var(--floresta)", "Lucro líquido");
     legenda.append(legCusto.item, legImpostos.item, legLucro.item);
 
     let inicializado = false;
@@ -78,12 +80,31 @@ Paisagismo.telasOrcamento = (() => {
       const margemEfetiva = valores.preco > 0 ? (lucroLiquido / valores.preco) * 100 : 0;
       const abaixoDoCusto = valores.preco + 0.004 < valores.custo;
       aviso.hidden = !abaixoDoCusto;
-      resumoHoras.textContent = ui.numero(valores.horas) + " h · " + ui.brl(valores.hora) + "/h";
+      if (ctx) {
+        const linkHoras = ui.elemento("button", ui.numero(valores.horas) + " h ↗", "link-preco-atalho");
+        linkHoras.type = "button";
+        linkHoras.title = "Editar etapas do projeto";
+        linkHoras.addEventListener("click", () => ctx.navegar("etapas"));
+        const linkHora = ui.elemento("button", ui.brl(valores.hora) + "/h ↗", "link-preco-atalho");
+        linkHora.type = "button";
+        linkHora.title = "Editar custos da operação";
+        linkHora.addEventListener("click", () => ctx.navegar("custos"));
+        resumoHoras.replaceChildren(linkHoras, ui.elemento("span", "·"), linkHora);
+      } else {
+        resumoHoras.textContent = ui.numero(valores.horas) + " h · " + ui.brl(valores.hora) + "/h";
+      }
       badgeMargem.textContent = abaixoDoCusto
         ? "Abaixo do custo"
         : "Resultado líquido: " + ui.percentual(Math.max(0, margemEfetiva));
       if (abaixoDoCusto) badgeMargem.dataset.alerta = "true";
       else delete badgeMargem.dataset.alerta;
+
+      fraseResumo.textContent = abaixoDoCusto
+        ? "O valor cobrado está " + ui.brl(Math.abs(lucroLiquido)) + " abaixo do custo total do projeto."
+        : "Custo mínimo de " + ui.brl(valores.custo) + ". Cobrando " + ui.brl(valores.preco)
+          + ", sobram " + ui.brl(Math.max(0, lucroLiquido)) + " livres (" + ui.percentual(Math.max(0, margemEfetiva)) + ").";
+      if (abaixoDoCusto) fraseResumo.dataset.alerta = "true";
+      else delete fraseResumo.dataset.alerta;
 
       const somaPartes = Math.max(0.01, valores.base + valores.impostos + Math.max(0, lucroLiquido));
       const pBase = Math.round((valores.base / somaPartes) * 100);
@@ -100,14 +121,52 @@ Paisagismo.telasOrcamento = (() => {
     return {
       exibir,
       destaque,
-      memoria: ui.cartao("Memória de cálculo", barraComposicao, legenda, ...grupos.values()),
+      memoria: ui.cartao("3 · Memória de cálculo", barraComposicao, legenda, ...grupos.values(), fraseResumo),
     };
+  }
+
+  function criarFluxograma(ctx, item, aoAtualizar) {
+    const regras = Paisagismo.comercial;
+    const hoje = regras.hoje();
+    const marcos = item.acompanhamento.marcos;
+    const trilha = ui.elemento("div", undefined, "fluxograma-proposta");
+    trilha.setAttribute("role", "group");
+    trilha.setAttribute("aria-label", "Etapas comerciais da proposta");
+
+    for (const [chave, rotulo] of regras.etapasFluxo) {
+      const dataMarco = marcos[chave] || "";
+      const concluido = Boolean(dataMarco);
+      const passo = ui.elemento("button", undefined, "etapa-fluxo");
+      passo.type = "button";
+      passo.dataset.concluido = String(concluido);
+      passo.setAttribute("aria-pressed", String(concluido));
+      const ponto = ui.elemento("span", concluido ? "✓" : "", "ponto-fluxo");
+      ponto.setAttribute("aria-hidden", "true");
+      const info = ui.elemento("span", undefined, "texto-fluxo");
+      info.append(
+        ui.elemento("strong", rotulo),
+        ui.elemento("small", dataMarco ? regras.formatarData(dataMarco) : "Pendente"),
+      );
+      passo.append(ponto, info);
+      passo.addEventListener("click", () => {
+        marcos[chave] = marcos[chave] ? "" : hoje;
+        if (item.acompanhamento.situacao !== "Recusada") {
+          if (marcos.fechamento || marcos.inicio) item.acompanhamento.situacao = "Aprovada";
+          else if (marcos.entregue || marcos.reuniao) item.acompanhamento.situacao = "Enviada";
+          else item.acompanhamento.situacao = "Planejada";
+        }
+        ctx.gravar(marcos[chave] ? rotulo + " marcada em " + regras.formatarData(hoje) + "." : rotulo + " desmarcada.");
+        aoAtualizar();
+      });
+      trilha.append(passo);
+    }
+    return trilha;
   }
 
   function orcamento(ctx) {
     const projeto = ctx.dados.projeto;
     const hora = Paisagismo.custos(ctx.dados.operacao).hora;
-    const resultado = resumo(projeto, hora);
+    const resultado = resumo(projeto, hora, ctx);
     const atualizar = ctx.aoAlterar(resultado.exibir);
     const nome = ui.campo("Nome do projeto", projeto.nome, ui.editar(projeto, "nome", atualizar));
     const comparar = ui.botao("Comparar cenários", () => ctx.navegar("comparar"), true);
@@ -142,26 +201,36 @@ Paisagismo.telasOrcamento = (() => {
       return true;
     });
     const margem = projeto.modoLucro === "margem";
+    const explicacaoModo = ui.elemento("small", margem
+      ? "Garante que o lucro líquido represente esse percentual do preço final."
+      : "Aplica esse percentual diretamente sobre o custo total do projeto.",
+    "dica-contextual-campo");
+    const blocoModo = ferramentas.rotular("Base do lucro", modo);
+    blocoModo.append(explicacaoModo);
     parametros.append(nome,
       ui.campo("Impostos sobre o subtotal (%)", projeto.impostos, ui.editar(projeto, "impostos", atualizar)),
-      ferramentas.rotular("Base do lucro", modo),
+      blocoModo,
       ui.campo(margem ? "Margem antes do desconto (%)" : "Acréscimo de lucro sobre o custo (%)", projeto.lucro,
         ui.editar(projeto, "lucro", atualizar)),
       ui.campo("Desconto sobre o preço calculado (%)", projeto.desconto, ui.editar(projeto, "desconto", atualizar), 0, 100));
-    const comercial = ui.botao("Editar cliente, escopo e condições", () => {
+    const clienteAtual = ctx.dados.clientes.find((c) => c.id === projeto.cliente);
+    const rotuloComercial = clienteAtual
+      ? "Cliente: " + clienteAtual.nome + " · Editar escopo"
+      : "Editar cliente, escopo e condições";
+    const comercial = ui.botao(rotuloComercial, () => {
       ui.abrirDialogo(comercial, "Cliente, escopo e condições",
         Paisagismo.telasComerciais.dadosProjeto(ctx, atualizar));
     }, true);
-    const dados = ui.cartao("Dados e percentuais", parametros, comercial);
+    const dados = ui.cartao("1 · Projeto e margens", parametros, comercial);
     dados.classList.add("orcamento-dados");
     esquerda.append(dados,
-      ui.editor("Despesas diretas (R$)", "Valor unitário em reais", projeto.despesas, atualizar,
-        ["Despesa", "Unitário (R$)"], { tipo: "despesa" }));
+      ui.editor("2 · Despesas diretas (R$)", "Valor unitário em reais", projeto.despesas, atualizar,
+        ["Despesa", "Unitário (R$)"], { tipo: "despesa", ctx }));
     const direita = ui.elemento("div", undefined, "pilha resumo");
     direita.append(resultado.destaque, resultado.memoria);
     const grade = ui.elemento("div", undefined, "grade grade-orcamento");
     grade.append(esquerda, direita);
-    return [ui.cabecalho("Orçamento", "Calcule o preço de um projeto de paisagismo.", acoes), grade];
+    return [ui.cabecalho("Orçamento", "Siga os 3 passos abaixo para precificar seu projeto com segurança.", acoes), grade];
   }
 
   function historico(ctx) {
@@ -203,36 +272,52 @@ Paisagismo.telasOrcamento = (() => {
         if (!normalizar(item.projeto.nome + " " + item.clienteNome).includes(termo)
           || (situacao.value && item.acompanhamento.situacao !== situacao.value)
           || (de.value && dia < de.value) || (ate.value && dia > ate.value)) return [];
-        const linha = ui.elemento("div", undefined, "linha cartao-proposta-item");
+        const cartaoItem = ui.elemento("article", undefined, "cartao-proposta-item");
+        const topoLinha = ui.elemento("div", undefined, "linha topo-proposta-item");
         const detalhes = ui.elemento("div");
         const calculado = Paisagismo.calcular(item.projeto, item.hora);
+        const tituloLinha = ui.elemento("div", undefined, "titulo-status-proposta");
         const etiqueta = ui.elemento("span", item.acompanhamento.situacao, "status-proposta");
         etiqueta.dataset.situacao = item.acompanhamento.situacao;
+        tituloLinha.append(ui.elemento("strong", item.projeto.nome), etiqueta);
         detalhes.append(
-          ui.elemento("strong", item.projeto.nome),
+          tituloLinha,
           ui.elemento("p", [
             item === ctx.versaoPendente && "Gravação pendente",
             item.clienteNome,
-            item.acompanhamento.situacao,
             ui.brl(calculado.preco),
             ui.numero(calculado.horas) + " h",
             data.format(new Date(item.data)),
           ].filter(Boolean).join(" · ")),
-          etiqueta,
         );
         const acoesLinha = ui.elemento("div", undefined, "acoes");
+        if (item !== ctx.versaoPendente) {
+          const btnExcluir = ui.botao("Excluir", () => {
+            if (!window.confirm("Excluir o orçamento \"" + (item.projeto.nome || "sem nome") + "\"?")) return;
+            const pos = ctx.dados.salvos.indexOf(item);
+            if (pos < 0) return;
+            ctx.dados.salvos.splice(pos, 1);
+            ctx.gravar("Orçamento excluído.");
+            if (!ctx.dados.salvos.length) ctx.navegar("historico");
+            else exibir();
+          }, true);
+          btnExcluir.classList.add("btn-remover-contextual");
+          acoesLinha.append(btnExcluir);
+        }
         acoesLinha.append(
           ui.botao("Prévia", () => ctx.navegar("proposta", item), true),
           ui.botao("Abrir", () => ctx.abrir(indice)),
         );
-        linha.append(detalhes, acoesLinha);
-        return [linha];
+        topoLinha.append(detalhes, acoesLinha);
+        const fluxograma = criarFluxograma(ctx, item, exibir);
+        cartaoItem.append(topoLinha, fluxograma);
+        return [cartaoItem];
       });
       paginas.atualizar(registros.length, 0);
     }
     for (const campo of [busca, de, ate]) campo.addEventListener("input", exibir);
     exibir();
-    return [ui.cabecalho("Orçamentos salvos", "Consulte as versões registradas de cada proposta.",
+    return [ui.cabecalho("Orçamentos salvos", "Consulte as versões registradas e acompanhe o andamento de cada proposta.",
       ui.botao("Comparar cenários", () => ctx.navegar("comparar"), true)),
       ui.cartao("Histórico", filtros, lista, paginas.controles)];
   }
@@ -242,7 +327,11 @@ Paisagismo.telasOrcamento = (() => {
     const grade = ui.elemento("div", undefined, "grade");
     const detalhes = ui.elemento("div", undefined, "pilha");
     const listar = (itens, formatar) => itens.map(([nome, valor]) => ui.linha(nome, formatar(valor), "strong").bloco);
-    detalhes.append(ui.cartao("Etapas", ...listar(item.projeto.etapa, (valor) => ui.numero(valor) + " h")),
+    const blocoFluxo = ui.cartao("Andamento comercial",
+      criarFluxograma(ctx, item, () => ctx.navegar("salvo", item)));
+    detalhes.append(
+      blocoFluxo,
+      ui.cartao("Etapas", ...listar(item.projeto.etapa, (valor) => ui.numero(valor) + " h")),
       ui.cartao("Despesas diretas", ...listar(item.projeto.despesas.map(([nome, valor, quantidade]) =>
         [nome, valor * (quantidade ?? 1)]), ui.brl)),
       ui.cartao("Percentuais aplicados",
@@ -251,7 +340,8 @@ Paisagismo.telasOrcamento = (() => {
           ui.numero(item.projeto.lucro) + "%", "strong").bloco,
         ui.linha("Desconto", ui.numero(item.projeto.desconto) + "%", "strong").bloco),
       Paisagismo.telasComerciais.acompanhamento(ctx, item),
-      Paisagismo.telasComerciais.realizadas(ctx, item));
+      Paisagismo.telasComerciais.realizadas(ctx, item),
+    );
     const direita = ui.elemento("div", undefined, "pilha resumo");
     direita.append(resultado.destaque, resultado.memoria);
     grade.append(detalhes, direita);
@@ -274,8 +364,19 @@ Paisagismo.telasOrcamento = (() => {
     acoes.append(ui.botao("Voltar ao histórico", () => ctx.navegar("historico"), true),
       ui.botao("Comparar", () => ctx.navegar("comparar", item), true),
       ui.botao("Criar revisão", () => ctx.duplicar(item, true), true),
-      ui.botao("Duplicar como novo projeto", () => ctx.duplicar(item), true),
-      ui.botao("Prévia da proposta", () => ctx.navegar("proposta", item)));
+      ui.botao("Duplicar como novo projeto", () => ctx.duplicar(item), true));
+    if (item !== ctx.versaoPendente) {
+      const btnExcluirSalvo = ui.botao("Excluir orçamento", () => {
+        if (!window.confirm("Excluir o orçamento \"" + (item.projeto.nome || "sem nome") + "\"?")) return;
+        const pos = ctx.dados.salvos.indexOf(item);
+        if (pos < 0) return;
+        ctx.dados.salvos.splice(pos, 1);
+        ctx.gravar("Orçamento excluído.");
+        ctx.navegar("historico");
+      }, true);
+      acoes.append(btnExcluirSalvo);
+    }
+    acoes.append(ui.botao("Prévia da proposta", () => ctx.navegar("proposta", item)));
     const descricao = (item === ctx.versaoPendente ? "Gravação pendente · " : "Salvo em ")
       + data.format(new Date(item.data));
     return [ui.cabecalho(item.projeto.nome, descricao, acoes), grade];
