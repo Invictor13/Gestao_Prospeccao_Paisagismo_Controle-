@@ -26,7 +26,7 @@ Paisagismo.telaCustos = (ctx) => {
         return { nome: nome || "Despesa " + (i + 1), valorMensal };
       })
       .sort((a, b) => b.valorMensal - a.valorMensal)
-      .slice(0, 5);
+      .slice(0, 4);
     const baseMensal = Math.max(0.01, total.mensal);
     ranking.replaceChildren(...(maiores.length ? maiores.map(({ nome, valorMensal }) => {
       const pct = Math.min(100, Math.round((valorMensal / baseMensal) * 100));
@@ -55,10 +55,10 @@ Paisagismo.telaCustos = (ctx) => {
       anual.bloco),
     ui.cartao("Maiores custos mensais", ranking),
   );
+  const porPagina = window.matchMedia?.("(min-width: 1041px) and (min-height: 820px)").matches
+    ? 22 : window.matchMedia?.("(min-width: 1041px)").matches ? 14 : 8;
   grade.append(ui.editor("Despesas da operação (R$)", "Valor por período em reais", operacao.custos, atualizar,
-    ["Despesa", "Valor (R$)"], { tipo: "custo", colunas: true,
-      porPagina: window.matchMedia?.("(min-width: 1041px) and (min-height: 900px)").matches
-        ? 22 : window.matchMedia?.("(min-width: 1041px)").matches ? 14 : 8 }), resumo);
+    ["Despesa", "Valor (R$)"], { tipo: "custo", colunas: true, porPagina }), resumo);
   exibir();
   return [ui.cabecalho("Custos da operação", "Defina as despesas fixas e a base mensal de horas."), grade];
 };

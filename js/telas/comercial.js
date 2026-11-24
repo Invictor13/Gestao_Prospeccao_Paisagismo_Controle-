@@ -100,7 +100,12 @@ Paisagismo.telasComerciais = (() => {
       lista.firstElementChild.querySelector("input").focus();
     }
 
+    const adicionar = ui.botao("Cadastrar cliente", criarNovoCliente);
+    const painel = ui.cabecalho("Clientes", "Guarde os contatos de quem contrata seus projetos.", adicionar);
+
     function exibir(inicio, fim) {
+      const vazio = !ctx.dados.clientes.length;
+      painel.hidden = vazio;
       lista.replaceChildren(...ctx.dados.clientes.slice(inicio, fim).map((cliente) => {
         const detalhes = ui.elemento("details", undefined, "cartao");
         const titulo = ui.elemento("summary");
@@ -146,18 +151,16 @@ Paisagismo.telasComerciais = (() => {
         detalhes.append(titulo, grade);
         return detalhes;
       }));
-      if (!ctx.dados.clientes.length) {
+      if (vazio) {
         lista.append(ui.estadoVazio(
-          "Nenhum cliente cadastrado",
-          "Cadastre um cliente para vincular seus projetos e propostas.",
-          ["1. Registre contatos e notas", "2. Vincule ao orçamento", "3. Acompanhe propostas por cliente"],
-          ui.botao("Cadastrar primeiro cliente", criarNovoCliente),
+          "Clientes",
+          "Nenhum cliente cadastrado ainda. Registre os contatos de quem contrata seus projetos para vincular às propostas.",
+          ui.botao("Cadastrar cliente", criarNovoCliente),
+          "clientes",
         ));
       }
     }
-    const adicionar = ui.botao("Cadastrar cliente", criarNovoCliente);
     paginas.atualizar(ctx.dados.clientes.length);
-    const painel = ui.cabecalho("Clientes", "Guarde os contatos de quem contrata seus projetos.", adicionar);
     return [painel, lista, paginas.controles];
   }
 
@@ -268,13 +271,12 @@ Paisagismo.telasComerciais = (() => {
     let pendentes = obterPendentes();
     const topo = ui.cabecalho("Próximos contatos", "Acompanhe os retornos registrados nas propostas.");
     if (!pendentes.length) {
-      const vazio = ui.estadoVazio(
-        "Nenhum retorno agendado",
-        "Abra um orçamento salvo e informe a data do próximo contato no acompanhamento comercial.",
-        ["1. Abra um orçamento salvo", "2. Defina a data do próximo contato", "3. Acompanhe os retornos aqui"],
+      return [ui.estadoVazio(
+        "Próximos contatos",
+        "Nenhum retorno agendado. Informe a data do próximo contato em um orçamento salvo para acompanhar sua agenda comercial.",
         ui.botao("Ver orçamentos salvos", () => ctx.navegar("historico")),
-      );
-      return [topo, vazio];
+        "retornos",
+      )];
     }
     const grupos = [
       ["Atrasados", "atrasado", (dia) => dia < hoje],

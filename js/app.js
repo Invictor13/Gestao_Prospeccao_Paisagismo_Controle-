@@ -230,4 +230,49 @@
     }, { once: true });
   });
   navegar(tela);
+
+  /* Intro cinemática com a logo (uma vez por sessão, pulável e acessível) */
+  const intro = document.querySelector("#intro-flora");
+  if (intro && window.matchMedia?.("(prefers-reduced-motion: no-preference)").matches) {
+    let jaViu = false;
+    try {
+      jaViu = typeof sessionStorage !== "undefined" && sessionStorage.getItem("flora.introVista") === "1";
+    } catch {
+      jaViu = false;
+    }
+    if (!jaViu) {
+      intro.hidden = false;
+      let encerrada = false;
+      const encerrarIntro = () => {
+        if (encerrada) return;
+        encerrada = true;
+        try {
+          if (typeof sessionStorage !== "undefined") sessionStorage.setItem("flora.introVista", "1");
+        } catch {
+          // Segue normalmente se sessionStorage não estiver disponível.
+        }
+        intro.classList.add("intro-saindo");
+        window.setTimeout?.(() => { intro.hidden = true; }, 430);
+      };
+      intro.addEventListener("click", encerrarIntro);
+      window.addEventListener?.("keydown", (evento) => {
+        if (["Escape", "Enter", " "].includes(evento.key)) encerrarIntro();
+      }, { once: true });
+      window.setTimeout?.(encerrarIntro, 1280);
+    }
+  }
+
+  /* Iluminação sutil reativa ao cursor nas superfícies editoriais */
+  if (window.matchMedia?.("(hover: hover) and (prefers-reduced-motion: no-preference)").matches) {
+    conteudo.addEventListener("pointermove", (evento) => {
+      const alvo = evento.target?.closest?.(".destaque-painel, .preco, .catalogo-modelos .cartao, .cartao-proposta-item");
+      if (!alvo) return;
+      const caixa = alvo.getBoundingClientRect();
+      if (!caixa.width || !caixa.height) return;
+      const x = Math.round(((evento.clientX - caixa.left) / caixa.width) * 100);
+      const y = Math.round(((evento.clientY - caixa.top) / caixa.height) * 100);
+      alvo.style.setProperty("--mx", x + "%");
+      alvo.style.setProperty("--my", y + "%");
+    });
+  }
 })();

@@ -1,8 +1,23 @@
 :root {
-  --largura-app: 1680px;
-  --recuo-app: clamp(14px, 2.8vw, 48px);
+  --largura-app: 1520px;
+  --recuo-app: clamp(14px, 2.4vw, 38px);
 }
-main { padding-block: clamp(12px, 2.2vh, 26px); }
+main {
+  padding-block: clamp(12px, 2vh, 24px);
+  display: flex;
+  flex-direction: column;
+}
+#conteudo {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+#conteudo > .entrada-tela {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 .rodape-app { position: sticky; bottom: 0; z-index: 3; }
 .rodape-interno { padding-block: 10px; }
 .destaque-painel { padding-block: clamp(16px, 3.3vh, 36px); }
@@ -27,7 +42,7 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
 }
 .tela-centralizada .estado-vazio::before { margin-inline: auto; }
 
-/* Modelos de serviço — Biblioteca de soluções */
+/* Modelos de serviço — Biblioteca de soluções editorial */
 .catalogo-modelos {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -40,14 +55,13 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
   align-content: space-between;
   justify-items: start;
   gap: 12px;
-  border-top: 4px solid var(--folhagem);
+  background:
+    radial-gradient(circle 220px at var(--mx, 50%) var(--my, 0%), #dde8d340 0%, transparent 72%),
+    var(--superficie);
 }
-.catalogo-modelos .cartao:nth-child(3n + 1) { border-top-color: var(--floresta); }
-.catalogo-modelos .cartao:nth-child(3n + 2) { border-top-color: var(--folhagem); }
-.catalogo-modelos .cartao:nth-child(3n + 3) { border-top-color: var(--salvia); }
 .topo-modelo {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   width: 100%;
@@ -55,14 +69,17 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
 .icone-modelo {
   display: inline-grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: var(--brotos);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #efece3;
+  border: 1px solid var(--borda);
   color: var(--floresta);
-  font-weight: 700;
-  font-size: .95rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  font-size: .92rem;
   flex: none;
+  transition: background-color var(--duracao-cartao) var(--curva), color var(--duracao-cartao) var(--curva);
 }
 .badges-modelo {
   display: flex;
@@ -72,12 +89,12 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
 .badge-modelo {
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
-  border-radius: 999px;
+  padding: 2px 8px;
+  border-radius: 6px;
   background: var(--marfim);
   border: 1px solid var(--borda);
-  color: var(--floresta);
-  font-size: .78rem;
+  color: var(--suave);
+  font-size: .75rem;
   font-weight: 600;
 }
 .previa-etapas-modelo {
@@ -90,18 +107,24 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
   width: 100%;
 }
 .previa-etapas-modelo li {
-  font-size: .76rem;
+  font-size: .75rem;
   padding: 2px 8px;
-  border-radius: 6px;
-  background: #eff5ec;
+  border-radius: 5px;
+  background: #f2efe6;
   color: var(--suave);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.catalogo-modelos .cartao > h2 { margin: 0; overflow-wrap: anywhere; }
-.catalogo-modelos .cartao > p { color: var(--suave); font-size: .9rem; }
+.catalogo-modelos .cartao > h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.catalogo-modelos .cartao > p { color: var(--suave); font-size: .86rem; }
 .grade-modelo {
   display: grid;
   grid-template-columns: minmax(210px, .35fr) minmax(0, 1fr);
@@ -127,14 +150,15 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
   flex: none;
   display: inline-grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--brotos);
+  background: #efece3;
   color: var(--floresta);
-  border: 1px solid var(--salvia);
+  border: 1px solid var(--borda-forte);
+  font-family: Georgia, "Times New Roman", serif;
   font-size: .86rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 .dados-resumo-cliente {
   display: grid;
@@ -142,12 +166,12 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
   min-width: 0;
 }
 .dados-resumo-cliente strong {
-  font-size: 1rem;
+  font-size: .98rem;
   color: var(--floresta);
   overflow-wrap: anywhere;
 }
 .dados-resumo-cliente small {
-  font-size: .8rem;
+  font-size: .79rem;
   color: var(--suave);
   font-weight: 450;
 }
@@ -155,13 +179,13 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
 /* Agenda Comercial — Linha do tempo */
 .grupo-agenda {
   position: relative;
-  border-left: 4px solid var(--folhagem);
+  border-left: 2px solid var(--folhagem);
 }
 .grupo-agenda[data-grupo="Atrasados"] {
-  border-left-color: #c87441;
+  border-left-color: var(--terracota);
 }
 .grupo-agenda[data-grupo="Hoje"] {
-  border-left-color: var(--folhagem);
+  border-left-color: var(--floresta);
 }
 .grupo-agenda[data-grupo="Agendados"] {
   border-left-color: var(--salvia);
@@ -170,7 +194,7 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
   padding: 10px 12px;
   margin-block: 6px;
   border: 1px solid var(--borda);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--marfim);
 }
 .item-agenda:last-child { margin-bottom: 0; }
@@ -180,47 +204,57 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
   padding: 11px 13px;
   margin-block: 6px;
   border: 1px solid var(--borda);
-  border-radius: 10px;
-  background: var(--marfim);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle 200px at var(--mx, 50%) var(--my, 50%), #dde8d330 0%, transparent 72%),
+    var(--marfim);
 }
 
 /* Custos e Etapas — Análise comparativa */
 .ranking-barras {
   display: grid;
-  gap: 9px;
+  gap: 8px;
   margin-top: 8px;
+  min-width: 0;
 }
 .item-ranking {
   display: grid;
   gap: 4px;
+  padding: 2px 0;
+  min-width: 0;
 }
 .topo-ranking {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
   gap: 8px;
-  font-size: .82rem;
+  font-size: .81rem;
+  min-width: 0;
 }
 .topo-ranking span {
+  flex: 1 1 auto;
+  min-width: 0;
   color: var(--suave);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .topo-ranking strong {
+  flex: none;
   color: var(--floresta);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .trilha-ranking {
-  height: 7px;
+  height: 5px;
   border-radius: 999px;
-  background: #e4ede0;
+  background: #e8e5da;
   overflow: hidden;
 }
 .barra-preenchimento {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--salvia), var(--folhagem));
+  background: var(--folhagem);
 }
 
 .paginacao {
@@ -231,40 +265,64 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
   gap: 8px;
   margin-top: 12px;
 }
-.paginacao .botao { font-size: .84rem; padding: 6px 11px; }
-.paginacao .botao:disabled { opacity: .48; cursor: default; }
-.paginacao-legenda { color: var(--suave); font-size: .84rem; text-align: center; font-weight: 550; }
+.paginacao .botao { font-size: .82rem; padding: 5px 11px; }
+.paginacao .botao:disabled { opacity: .45; cursor: default; }
+.paginacao-legenda { color: var(--suave); font-size: .82rem; text-align: center; font-weight: 550; }
 
 .cartao-editor .editor {
-  grid-template-columns: minmax(0, 1fr) clamp(76px, 22%, 110px) auto;
+  grid-template-columns: minmax(0, 1fr) clamp(68px, 18%, 92px) auto;
   align-items: center;
-  column-gap: 8px;
-  row-gap: 4px;
-  padding: 6px 8px;
-  margin-bottom: 4px;
-  background: var(--marfim);
-  border: 1px solid #dce6d9;
-  border-radius: 9px;
+  column-gap: 4px;
+  padding: 3px 5px 4px 6px;
+  margin-bottom: 3px;
+  background: transparent;
+  border: 1px solid #ece9de;
+  border-radius: 7px;
+  min-height: 36px;
+}
+.cartao-editor[data-tipo="etapa"] .editor {
+  grid-template-columns: minmax(0, 1fr) 48px auto;
+}
+.cartao-editor[data-tipo="custo"] .editor {
+  grid-template-columns: minmax(0, 1fr) 72px auto;
 }
 .cartao-editor .editor + .editor { margin-block-start: 0; }
 .cartao-editor .editor input,
 .cartao-editor .nome-item textarea,
 .cartao-editor .nome-item::after {
-  padding: 5px 8px;
+  padding: 4px 5px;
+  font-size: .815rem;
+}
+.cartao-editor .nome-item:not(:focus-within) textarea {
+  border-color: transparent;
+  background: transparent;
+  padding-inline: 1px;
+}
+.cartao-editor .editor:hover .nome-item:not(:focus-within) textarea {
+  border-color: #dfdcd0;
+  background: var(--superficie);
 }
 .cartao-editor .acoes-item {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 1px;
 }
 .cartao-editor .remover {
-  width: 30px;
-  min-height: 32px;
+  width: 22px;
+  min-height: 28px;
 }
 .botao-detalhes-item {
-  padding: 5px 9px;
-  font-size: .78rem;
-  min-height: 32px;
+  padding: 3px 5px;
+  font-size: .72rem;
+  min-height: 28px;
+  background: transparent;
+  border-color: transparent;
+  color: var(--suave);
+}
+.botao-detalhes-item:hover {
+  background: #efece3;
+  border-color: #d1cdc0;
+  color: var(--floresta);
 }
 .orcamento-dados > .botao { margin-top: 14px; width: 100%; }
 .dialogo-edicao {
@@ -298,6 +356,123 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
   border-color: var(--floresta);
 }
 
+@media (min-width: 961px) {
+  #conteudo > .entrada-tela {
+    justify-content: center;
+  }
+  main .cabecalho {
+    margin-bottom: 16px;
+  }
+  main h1 {
+    font-size: clamp(1.75rem, 2.5vw, 2.35rem);
+  }
+  main .cabecalho p {
+    font-size: .93rem;
+    margin-top: 3px;
+  }
+  .grade-orcamento {
+    grid-template-columns: minmax(250px, 28fr) minmax(340px, 42fr) minmax(270px, 30fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+  .grade-orcamento > .pilha:first-child {
+    display: contents;
+  }
+  .grade-orcamento .orcamento-dados {
+    display: flex;
+    flex-direction: column;
+  }
+  .grade-orcamento .cartao-editor {
+    display: flex;
+    flex-direction: column;
+  }
+  .grade-orcamento .parametros {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    align-content: start;
+  }
+  .grade-orcamento .orcamento-dados > .botao {
+    margin-top: auto;
+    padding-block: 10px;
+  }
+  .grade-orcamento .cartao-editor .lista-itens {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 9px;
+  }
+  .grade-orcamento .cartao-editor .editor {
+    margin-bottom: 0;
+    min-height: 45px;
+    padding: 5px 8px 5px 10px;
+  }
+  .grade-orcamento .cartao-editor .editor input,
+  .grade-orcamento .cartao-editor .nome-item textarea,
+  .grade-orcamento .cartao-editor .nome-item::after {
+    font-size: .92rem;
+    padding: 6px 9px;
+  }
+  .grade-orcamento .cartao-editor .nome-item:not(:focus-within) textarea {
+    height: 35px;
+  }
+  .grade-orcamento .campo { gap: 5px; }
+  .grade-orcamento .campo > input, .grade-orcamento .campo > select {
+    min-height: 41px;
+    padding: 7px 11px;
+    font-size: .92rem;
+  }
+  .grade-orcamento .campo > span { font-size: .88rem; }
+  .grade-orcamento .resumo {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .grade-orcamento .preco {
+    padding: 16px 20px;
+  }
+  .grade-orcamento .preco h2 {
+    margin-bottom: 5px;
+    font-size: .8rem;
+  }
+  .grade-orcamento .preco strong {
+    font-size: clamp(1.75rem, 2.45vw, 2.25rem);
+    line-height: 1.24;
+  }
+  .grade-orcamento .preco .subtitulo-preco {
+    margin-top: 9px;
+    padding-top: 9px;
+    font-size: .82rem;
+  }
+  .grade-orcamento .resumo > .cartao:last-child {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 16px 20px;
+  }
+  .grade-orcamento .resumo > .cartao:last-child h2 {
+    margin-bottom: 3px;
+    font-size: 1.02rem;
+  }
+  .grade-orcamento .barra-composicao {
+    margin: 2px 0 0;
+    height: 7px;
+  }
+  .grade-orcamento .legenda-composicao {
+    margin-top: 0;
+    margin-bottom: 6px;
+    font-size: .78rem;
+  }
+  .grade-orcamento .grupo-memoria { padding-block: 4px; }
+  .grade-orcamento .grupo-memoria + .grupo-memoria { margin-top: 5px; padding-top: 8px; }
+  .grade-orcamento .titulo-grupo-memoria { font-size: .73rem; margin-bottom: 3px; }
+  .grade-orcamento .cartao { padding: 18px 20px; }
+  .grade-orcamento .linha { padding-block: 4.5px; font-size: .88rem; }
+  .grade-orcamento .linha-total { padding: 6px 9px; margin-block: 2px; }
+}
+
 @media (min-width: 1041px) {
   #aviso-demonstracao:not([hidden]) {
     display: flex;
@@ -305,9 +480,9 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
     justify-content: space-between;
     align-items: center;
     gap: 4px 12px;
-    padding-block: 8px;
-    margin-bottom: 12px;
-    font-size: .85rem;
+    padding-block: 6px;
+    margin-bottom: 10px;
+    font-size: .82rem;
   }
   .painel-inicio { grid-template-columns: minmax(0, 2.05fr) minmax(0, 1fr); }
   .painel-inicio .indicadores-secundarios { grid-template-columns: 1fr; padding: 10px; }
@@ -318,40 +493,68 @@ main { padding-block: clamp(12px, 2.2vh, 26px); }
     align-items: center;
   }
   .painel-inicio .indicadores-secundarios > div::before { display: none; }
-  .painel-espaco .cartao { padding: 14px 18px; }
-  .painel-espaco .linha { padding-block: 5px; }
+  .painel-espaco .cartao { padding: 13px 16px; }
+  .painel-espaco .linha { padding-block: 4px; }
   .painel-espaco .status-proposta { margin-top: 2px; }
-  .painel-espaco .linha p { line-height: 1.3; }
-  .painel-espaco .funil-linha { margin-top: 7px; }
-  .grade-orcamento {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(260px, .92fr);
+  .painel-espaco .linha p { line-height: 1.25; }
+  .painel-espaco .funil-linha { margin-top: 6px; }
+  .grade-cadastro {
+    grid-template-columns: minmax(0, 74fr) minmax(250px, 26fr);
     gap: 14px;
+    align-items: stretch;
   }
-  .grade-orcamento > .pilha:first-child { display: contents; }
-  .grade-orcamento .parametros { grid-template-columns: 1fr; gap: 8px; }
-  .grade-orcamento .campo { gap: 4px; }
-  .grade-orcamento .campo > input, .grade-orcamento .campo > select { min-height: 36px; }
-  .grade-orcamento .campo > span { font-size: .84rem; }
-  .grade-orcamento .resumo { position: static; gap: 12px; }
-  .grade-orcamento .cartao { padding: 14px 16px; }
-  .grade-orcamento .linha { padding-block: 4px; font-size: .875rem; }
-  .grade-orcamento .preco strong { font-size: clamp(1.6rem, 2.6vw, 2.4rem); }
-  .grade-cadastro { grid-template-columns: minmax(0, 1fr) minmax(265px, .36fr); gap: 16px; }
+  .grade-cadastro > .cartao-editor {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .grade-cadastro > .cartao-editor .lista-itens {
+    flex: 1;
+    align-content: start;
+  }
+  .grade-cadastro > .resumo-operacao {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+  .grade-cadastro > .resumo-operacao > .cartao {
+    padding: 13px 15px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .grade-cadastro > .resumo-operacao > .cartao:last-child {
+    flex: 1;
+  }
+  .grade-cadastro .preco strong,
+  .grade-cadastro .preco > output {
+    font-size: clamp(1.45rem, 2.1vw, 1.9rem);
+  }
+  .grade-cadastro .ranking-barras {
+    gap: 6px;
+    margin-top: 4px;
+  }
   .lista-dupla {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px 14px;
+    gap: 5px 12px;
   }
   .lista-dupla .editor { margin-bottom: 0; }
 }
 @media (min-width: 1041px) and (max-height: 780px) {
-  main { padding-block: 12px; }
-  main h1 { font-size: clamp(1.9rem, 3.1vw, 2.7rem); }
-  main .cabecalho { margin-bottom: 12px; }
+  main { padding-block: 10px; }
+  main h1 { font-size: clamp(1.55rem, 2.2vw, 2.05rem); }
+  main .cabecalho { margin-bottom: 10px; }
   .painel-inicio .topo-painel { margin: 0; gap: 10px; }
   .destaque-painel { padding: 16px 20px; gap: 12px; }
   .grade-cadastro .cartao { padding: 12px 14px; }
-  .grade-orcamento .cartao { padding-block: 11px; }
+  .grade-orcamento .cartao { padding: 12px 15px; }
+  .grade-orcamento .parametros { gap: 10px; }
+  .grade-orcamento .campo > input, .grade-orcamento .campo > select { min-height: 35px; }
+  .grade-orcamento .cartao-editor .lista-itens { gap: 5px; }
+  .grade-orcamento .cartao-editor .editor { min-height: 37px; padding: 3px 7px; }
+  .grade-orcamento .linha { padding-block: 2.5px; font-size: .82rem; }
 }
 @media (max-width: 1040px) {
   .painel-detalhes:has(> :nth-child(3)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
