@@ -72,13 +72,343 @@ Paisagismo.ui = (() => {
     }
   }
 
-  function estadoVazio(titulo, descricao, acao = null, icone = "historico") {
-    const bloco = elemento("section", undefined, "cartao estado-vazio");
-    bloco.dataset.icone = icone;
-    const filhos = [elemento("h1", titulo), elemento("p", descricao)];
-    if (acao) filhos.push(acao);
-    bloco.append(...filhos);
+  function ilustrarEstadoVazio(variante = "documentos", estado = "vazio") {
+    if (typeof document.createElementNS !== "function") return elemento("span", undefined, "flora-vazio-ilustracao");
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 120 96");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("class", "flora-vazio-svg");
+    const s = { stroke: "currentColor", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" };
+    const add = (tag, attrs) => {
+      const n = document.createElementNS(SVG_NS, tag);
+      for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+      svg.append(n);
+    };
+    if (estado === "busca") {
+      add("circle", { ...s, cx: "54", cy: "44", r: "20", fill: "currentColor", "fill-opacity": "0.06" });
+      add("path", { ...s, d: "M69 59 L86 76" });
+      add("path", { ...s, d: "M46 46 C48 36, 56 34, 62 38 C59 46, 52 48, 46 46 Z", "stroke-opacity": "0.6" });
+    } else if (estado === "erro") {
+      add("circle", { ...s, cx: "60", cy: "48", r: "24", fill: "currentColor", "fill-opacity": "0.06" });
+      add("path", { ...s, d: "M60 36v15M60 58h.01" });
+    } else if (estado === "carregando") {
+      add("circle", { ...s, cx: "60", cy: "48", r: "20", "stroke-dasharray": "42 20", "stroke-opacity": "0.7" });
+      add("path", { ...s, d: "M54 52 C56 42, 62 40, 67 43 C65 50, 59 53, 54 52 Z", fill: "currentColor", "fill-opacity": "0.1" });
+    } else if (variante === "clientes") {
+      add("circle", { ...s, cx: "48", cy: "36", r: "11", fill: "currentColor", "fill-opacity": "0.08" });
+      add("path", { ...s, d: "M28 70c0-11 9-19 20-19s20 8 20 19" });
+      add("path", { ...s, d: "M74 68 C74 52, 84 40, 96 34", "stroke-opacity": "0.55" });
+      add("path", { ...s, d: "M78 52 C84 46, 92 46, 96 52 C90 56, 82 56, 78 52 Z", fill: "currentColor", "fill-opacity": "0.1" });
+    } else if (variante === "calendario" || variante === "retornos") {
+      add("rect", { ...s, x: "26", y: "24", width: "68", height: "54", rx: "10", fill: "currentColor", "fill-opacity": "0.06" });
+      add("path", { ...s, d: "M42 18v12M78 18v12M26 39h68" });
+      add("path", { ...s, d: "M52 60 C55 50, 64 47, 70 52 C66 60, 58 63, 52 60 Z", fill: "currentColor", "fill-opacity": "0.12" });
+    } else if (variante === "modelos") {
+      add("path", { ...s, d: "M60 76V30" });
+      add("path", { ...s, d: "M60 58 C44 56, 36 44, 40 30 C52 32, 60 42, 60 58 Z", fill: "currentColor", "fill-opacity": "0.1" });
+      add("path", { ...s, d: "M60 46 C76 44, 84 32, 80 18 C68 20, 60 30, 60 46 Z", fill: "currentColor", "fill-opacity": "0.08" });
+      add("path", { ...s, d: "M34 76h52", "stroke-opacity": "0.45" });
+    } else {
+      add("path", { ...s, d: "M36 20h34l14 14v44a4 4 0 0 1-4 4H36a4 4 0 0 1-4-4V24a4 4 0 0 1 4-4Z", fill: "currentColor", "fill-opacity": "0.06" });
+      add("path", { ...s, d: "M70 20v14h14M44 48h26M44 58h18", "stroke-opacity": "0.55" });
+      add("path", { ...s, d: "M44 38 C48 31, 56 30, 60 34 C56 39, 49 40, 44 38 Z", fill: "currentColor", "fill-opacity": "0.14" });
+    }
+    return svg;
+  }
+
+  function estadoVazioBotanico({
+    variante = "documentos",
+    estado = "vazio",
+    titulo,
+    descricao = "",
+    acaoPrincipal = null,
+    acaoSecundaria = null,
+    tagTitulo = "h2",
+  }) {
+    const bloco = elemento("section", undefined, "cartao estado-vazio flora-estado-vazio");
+    bloco.dataset.variante = variante;
+    bloco.dataset.estado = estado;
+    const arte = elemento("div", undefined, "flora-vazio-arte");
+    arte.append(ilustrarEstadoVazio(variante, estado));
+    bloco.append(arte, elemento(tagTitulo, titulo, "flora-vazio-titulo"));
+    if (descricao) bloco.append(elemento("p", descricao, "flora-vazio-desc"));
+    if (acaoPrincipal || acaoSecundaria) {
+      const acoes = elemento("div", undefined, "acoes flora-vazio-acoes");
+      if (acaoPrincipal) acoes.append(acaoPrincipal);
+      if (acaoSecundaria) acoes.append(acaoSecundaria);
+      bloco.append(acoes);
+    }
     return bloco;
+  }
+
+  function estadoVazio(titulo, descricao, acao = null, icone = "historico") {
+    const mapa = { historico: "documentos", clientes: "clientes", retornos: "calendario", modelos: "modelos" };
+    return estadoVazioBotanico({
+      variante: mapa[icone] || icone || "documentos",
+      estado: "vazio",
+      titulo,
+      descricao,
+      acaoPrincipal: acao,
+      tagTitulo: "h1",
+    });
+  }
+
+  function cabecalhoBotanico({ titulo, indicadores = [], acoes = [], navegacaoTopo = null, destaque = "" }) {
+    const bot = Paisagismo.botanica;
+    const header = bot
+      ? bot.OrganicSurface("header", "botanical-luxury-hero orcamento-painel-hero gestao-painel-hero")
+      : elemento("header", undefined, "botanical-luxury-hero orcamento-painel-hero gestao-painel-hero");
+    if (bot) {
+      const ramo = bot.BotanicalBranch("luxury");
+      header.append(bot.LeafShadow(), bot.OrganicPattern(), ramo);
+      bot.ativarAmbienteBotanico?.(header, ramo);
+    }
+    const conteudo = elemento("div", undefined, "orcamento-hero-conteudo gestao-hero-conteudo");
+    const topo = elemento("div", undefined, "orcamento-hero-topo");
+    const tituloWrap = elemento("div", undefined, "orcamento-hero-titulo-wrap");
+    if (navegacaoTopo) tituloWrap.append(navegacaoTopo);
+    tituloWrap.append(elemento("h1", titulo));
+    if (destaque) tituloWrap.append(elemento("span", destaque, "etapas-hero-subtitulo-inline"));
+    topo.append(tituloWrap);
+
+    const rodape = elemento("div", undefined, "orcamento-hero-rodape gestao-hero-rodape");
+    const indWrap = elemento("div", undefined, "orcamento-hero-indicadores gestao-hero-indicadores");
+    for (const ind of indicadores) {
+      const w = elemento("div", undefined, "preco-indicador");
+      if (ind.estado) w.dataset.estado = ind.estado;
+      const val = elemento("strong", ind.valor, "preco-indicador-valor");
+      w.append(elemento("span", ind.rotulo, "preco-indicador-titulo"), val);
+      indWrap.append(w);
+    }
+    const acoesWrap = elemento("div", undefined, "acoes orcamento-acoes");
+    acoesWrap.append(...acoes);
+    if (indicadores.length) rodape.append(indWrap, acoesWrap);
+    else topo.append(acoesWrap);
+
+    conteudo.append(topo);
+    if (indicadores.length) conteudo.append(rodape);
+    header.append(conteudo);
+    return header;
+  }
+
+  function menuContextual({ rotulo = "Mais ações", itens = [] }) {
+    const wrap = elemento("div", undefined, "flora-menu-ctx");
+    const gatilho = elemento("button", "⋯", "flora-menu-ctx-btn");
+    gatilho.type = "button";
+    gatilho.setAttribute("aria-haspopup", "menu");
+    gatilho.setAttribute("aria-expanded", "false");
+    gatilho.setAttribute("aria-label", rotulo);
+    gatilho.title = rotulo;
+
+    const lista = elemento("div", undefined, "flora-menu-ctx-lista");
+    lista.setAttribute("role", "menu");
+    lista.hidden = true;
+
+    function fechar(focarGatilho = false) {
+      if (lista.hidden) return;
+      lista.hidden = true;
+      gatilho.setAttribute("aria-expanded", "false");
+      if (focarGatilho) gatilho.focus?.();
+    }
+
+    function abrir() {
+      for (const outro of document.querySelectorAll?.(".flora-menu-ctx-lista:not([hidden])") || []) {
+        if (outro !== lista) {
+          outro.hidden = true;
+          outro.previousElementSibling?.setAttribute?.("aria-expanded", "false");
+        }
+      }
+      lista.hidden = false;
+      gatilho.setAttribute("aria-expanded", "true");
+      lista.querySelector?.("button:not([disabled])")?.focus?.();
+    }
+
+    for (const item of itens) {
+      if (!item) continue;
+      const btn = elemento("button", item.rotulo, "flora-menu-ctx-item" + (item.perigo ? " perigo" : ""));
+      btn.type = "button";
+      btn.setAttribute("role", "menuitem");
+      if (item.desabilitado) btn.disabled = true;
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation?.();
+        fechar(false);
+        item.acao?.();
+      });
+      lista.append(btn);
+    }
+
+    gatilho.addEventListener("click", (e) => {
+      e.stopPropagation?.();
+      if (lista.hidden) abrir();
+      else fechar(false);
+    });
+    lista.addEventListener("keydown", (e) => {
+      const botoes = [...(lista.querySelectorAll?.("button:not([disabled])") || [])];
+      const idx = botoes.indexOf(document.activeElement);
+      if (e.key === "Escape") {
+        e.preventDefault?.();
+        fechar(true);
+      } else if (e.key === "ArrowDown" && botoes.length) {
+        e.preventDefault?.();
+        botoes[(idx + 1) % botoes.length]?.focus();
+      } else if (e.key === "ArrowUp" && botoes.length) {
+        e.preventDefault?.();
+        botoes[(idx - 1 + botoes.length) % botoes.length]?.focus();
+      }
+    });
+    if (typeof document.addEventListener === "function") {
+      document.addEventListener("click", (e) => {
+        if (!lista.hidden && !wrap.contains?.(e.target)) fechar(false);
+      });
+    }
+
+    wrap.append(gatilho, lista);
+    return wrap;
+  }
+
+  let modalContextualAtivo = null;
+  function abrirModalContextual({
+    titulo,
+    subtitulo = "",
+    tamanho = "padrao",
+    origemEl = null,
+    modo = "edicao",
+    textoConfirmar = "Confirmar",
+    textoCancelar = "Cancelar",
+    montar,
+    estaAlterado = () => false,
+    aoConfirmar = () => {},
+    aoCancelar = () => {},
+  }) {
+    if (modalContextualAtivo) modalContextualAtivo.forcarFechar();
+
+    const dialog = elemento("dialog", undefined, "flora-ct-dialog");
+    dialog.dataset.tamanho = tamanho;
+    dialog.setAttribute("aria-label", titulo);
+
+    const card = elemento("div", undefined, "flora-ct-card");
+    const topo = elemento("header", undefined, "flora-ct-topo");
+    const topoTexto = elemento("div", undefined, "etapas-modal-topo-texto");
+    topoTexto.append(elemento("h2", titulo));
+    if (subtitulo) topoTexto.append(elemento("small", subtitulo, "etapas-modal-subtitulo"));
+    const btnFechar = elemento("button", "×", "flora-ct-fechar");
+    btnFechar.type = "button";
+    btnFechar.setAttribute("aria-label", "Fechar " + titulo);
+    topo.append(topoTexto, btnFechar);
+
+    const corpo = elemento("div", undefined, "flora-ct-corpo");
+    const rodape = elemento("footer", undefined, "flora-ct-rodape");
+    const grupoDireita = elemento("div", undefined, "flora-ct-rodape-acoes");
+    const acoesExtras = [];
+
+    let fechando = false;
+    const reduzido = typeof window !== "undefined"
+      && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+    function limparDialogo(confirmado) {
+      dialog.close?.();
+      dialog.remove?.();
+      if (origemEl?.dataset) delete origemEl.dataset.transformAtivo;
+      if (modalContextualAtivo?.dialog === dialog) modalContextualAtivo = null;
+      origemEl?.focus?.();
+      if (confirmado && origemEl?.classList) {
+        origemEl.classList.remove("atualizado-pulso");
+        void origemEl.offsetWidth;
+        origemEl.classList.add("atualizado-pulso");
+      }
+    }
+
+    function fechar(confirmado = false, viaEscapeOuBackdrop = false) {
+      if (fechando) return;
+      if (!confirmado && modo === "edicao" && viaEscapeOuBackdrop && estaAlterado()) {
+        const descartar = typeof window !== "undefined" && typeof window.confirm === "function"
+          ? window.confirm("Descartar as alterações não confirmadas?")
+          : true;
+        if (!descartar) return;
+      }
+      fechando = true;
+      if (confirmado) aoConfirmar();
+      else aoCancelar();
+
+      if (!reduzido && typeof window?.setTimeout === "function") {
+        dialog.dataset.fechando = "true";
+        delete dialog.dataset.visivel;
+        if (card.style) {
+          card.style.transform = "scale(0.97)";
+          card.style.opacity = "0";
+        }
+        window.setTimeout(() => limparDialogo(confirmado), 210);
+      } else {
+        limparDialogo(confirmado);
+      }
+    }
+
+    const btnConfirmar = modo === "consulta"
+      ? botao("Fechar", () => fechar(true, false))
+      : botao(textoConfirmar, () => fechar(true, false));
+
+    const conteudo = montar({
+      fecharConfirmando: () => fechar(true, false),
+      fecharCancelando: () => fechar(false, false),
+      adicionarAcaoEsquerda: (el) => acoesExtras.push(el),
+      definirConfirmarDesabilitado: (desabilitado) => { btnConfirmar.disabled = Boolean(desabilitado); },
+      atualizarTitulo: (novoTit, novoSub = "") => {
+        topoTexto.children[0].textContent = novoTit;
+        if (topoTexto.children[1]) topoTexto.children[1].textContent = novoSub;
+      },
+    });
+    corpo.append(conteudo);
+
+    for (const el of acoesExtras) rodape.append(el);
+    if (modo === "consulta") {
+      grupoDireita.append(btnConfirmar);
+    } else {
+      grupoDireita.append(
+        botao(textoCancelar, () => fechar(false, false), true),
+        btnConfirmar,
+      );
+    }
+    rodape.append(grupoDireita);
+    card.append(topo, corpo, rodape);
+    dialog.append(card);
+
+    btnFechar.addEventListener("click", () => fechar(false, true));
+    dialog.addEventListener("cancel", (e) => {
+      e.preventDefault?.();
+      fechar(false, true);
+    });
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) fechar(false, true);
+    });
+
+    modalContextualAtivo = {
+      dialog,
+      forcarFechar() {
+        fechando = true;
+        limparDialogo(false);
+      },
+    };
+
+    if (origemEl?.dataset) origemEl.dataset.transformAtivo = "true";
+    document.body?.append?.(dialog);
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.open = true;
+
+    if (!reduzido && card.style) {
+      card.style.transform = "scale(0.97)";
+      card.style.opacity = "0";
+      void card.offsetWidth;
+      window.requestAnimationFrame?.(() => {
+        dialog.dataset.visivel = "true";
+        card.style.transform = "scale(1)";
+        card.style.opacity = "1";
+      });
+    } else {
+      dialog.dataset.visivel = "true";
+    }
+    return dialog;
   }
 
   function entrada(rotulo, valor, atualizar, minimo, tag = "input", maximo) {
@@ -625,8 +955,8 @@ Paisagismo.ui = (() => {
     };
   }
 
-  return { elemento, botao, cabecalho, cartao, linha, campo, editor, editar, mostrarValor, animarNumero,
-    estadoVazio, paginador, abrirDialogo, abrirGaveta,
+  return { elemento, botao, cabecalho, cabecalhoBotanico, cartao, linha, campo, editor, editar, mostrarValor, animarNumero,
+    estadoVazio, estadoVazioBotanico, menuContextual, abrirModalContextual, paginador, abrirDialogo, abrirGaveta,
     brl: (valor) => reais.format(valor),
     numero: (valor) => numeros.format(valor),
     percentual: (valor) => percentuais.format(valor) + "%" };

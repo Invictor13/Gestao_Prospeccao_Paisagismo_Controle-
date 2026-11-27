@@ -1,0 +1,381 @@
+/* Botanical Rendering System — Botanical Luxury */
+
+.botanical-organic-surface {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px 22px 16px 20px;
+  border: 1px solid var(--borda);
+  background: var(--superficie);
+}
+
+/* Painel Principal Botanical Luxury (240px–280px proporcional em desktop) */
+.botanical-luxury-hero {
+  --luz-x: 80%;
+  --luz-y: 18%;
+  --luz-cor-a: rgba(169, 189, 145, 0.22);
+  --luz-cor-b: rgba(77, 120, 82, 0.16);
+  --atmosfera-fundo: linear-gradient(120deg, #11281f 0%, #17362b 44%, #204939 100%);
+  min-height: clamp(154px, 21dvh, 224px);
+  display: flex;
+  align-items: center;
+  padding: clamp(14px, 2.1dvh, 26px) clamp(22px, 3vw, 36px);
+  border-radius: 18px 26px 18px 22px;
+  border: 1px solid #244d3e;
+  background: var(--atmosfera-fundo);
+  color: #faf9f4;
+  box-shadow: 0 10px 30px #12292026, 0 2px 6px #12292014;
+  transition: background 950ms var(--curva), border-color 950ms var(--curva);
+}
+
+/* Atmosferas adaptativas ao estado do carrossel */
+.botanical-luxury-hero[data-atmosfera="negociacao"] {
+  --luz-cor-a: rgba(169, 189, 145, 0.24);
+  --luz-cor-b: rgba(77, 120, 82, 0.18);
+}
+.botanical-luxury-hero[data-atmosfera="aprovado"] {
+  --luz-cor-a: rgba(132, 179, 134, 0.24);
+  --luz-cor-b: rgba(42, 102, 68, 0.22);
+  border-color: #295945;
+}
+.botanical-luxury-hero[data-atmosfera="conversao"] {
+  --luz-cor-a: rgba(196, 166, 107, 0.20);
+  --luz-cor-b: rgba(116, 142, 121, 0.18);
+  border-color: #2f5743;
+}
+.botanical-luxury-hero[data-atmosfera="marca"] {
+  --luz-cor-a: rgba(182, 202, 158, 0.25);
+  --luz-cor-b: rgba(77, 120, 82, 0.18);
+}
+
+/* Camada 2: Iluminação ambiental dinâmica e escurecimento progressivo à esquerda */
+.botanical-leaf-shadow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, rgba(12, 30, 23, 0.42) 0%, rgba(15, 36, 28, 0.16) 38%, transparent 68%),
+    radial-gradient(ellipse 46% 86% at var(--luz-x) var(--luz-y), var(--luz-cor-a) 0%, transparent 66%),
+    radial-gradient(ellipse 38% 72% at 16% 88%, var(--luz-cor-b) 0%, transparent 68%);
+  transition: opacity 500ms var(--curva);
+}
+.botanical-luxury-hero.luz-ativa .botanical-leaf-shadow {
+  opacity: 1;
+}
+
+/* Textura sutil de nervuras sobre a superfície escura */
+.botanical-organic-pattern {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .22;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='180' viewBox='0 0 360 180' fill='none'%3E%3Cg stroke='%23E4EBD9' stroke-opacity='0.14' stroke-width='0.9'%3E%3Cpath d='M-20 140 C60 110 130 60 220 20'/%3E%3Cpath d='M45 114 C65 92 92 78 124 74'/%3E%3Cpath d='M95 88 C118 62 146 46 184 44'/%3E%3Cpath d='M145 58 C170 36 202 22 238 22'/%3E%3Cpath d='M65 110 C82 130 105 144 134 150'/%3E%3Cpath d='M120 76 C140 96 168 110 198 116'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 360px 180px;
+  background-repeat: repeat;
+}
+
+.botanical-hero-conteudo {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: clamp(0px, 26vw, 340px);
+}
+
+.botanical-hero-esquerda {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+  max-width: min(100%, 440px);
+}
+
+.botanical-hero-controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.botanical-luxury-hero .botao:not(.secundario) {
+  background: #faf9f4;
+  color: var(--forest);
+  border-color: #faf9f4;
+  font-weight: 650;
+  padding: 10px 18px;
+  border-radius: 9px;
+  box-shadow: 0 2px 8px rgba(8, 22, 16, 0.18);
+  transition: transform 170ms var(--curva), box-shadow 200ms var(--curva), background-color 180ms var(--curva), border-color 180ms var(--curva);
+}
+.botanical-luxury-hero .botao:not(.secundario)::before {
+  content: "+ ";
+  font-weight: 700;
+}
+
+.botanical-luxury-hero .botao:not(.secundario):hover {
+  background: var(--mist);
+  border-color: var(--mist);
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 18px rgba(8, 22, 16, 0.28);
+}
+.botanical-luxury-hero .botao:not(.secundario):active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 6px rgba(8, 22, 16, 0.2);
+}
+
+.botanical-hero-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  padding: 6px 4px;
+  background: transparent;
+  color: #e4ebd9;
+  font-size: .86rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 180ms var(--curva);
+}
+.botanical-hero-link-seta {
+  display: inline-block;
+  transition: transform 190ms var(--curva);
+}
+
+.botanical-hero-link:hover {
+  color: #ffffff;
+}
+.botanical-hero-link:hover .botanical-hero-link-seta {
+  transform: translate(2px, -1px);
+}
+
+.botanical-luxury-hero .painel-seletor-periodo {
+  background: #0f251d99;
+  color: #faf9f4;
+  border-color: #e4ebd942;
+}
+
+.botanical-luxury-hero .painel-seletor-periodo option {
+  background: var(--forest);
+  color: #faf9f4;
+}
+
+.botanical-luxury-hero :focus-visible {
+  outline-color: var(--mist);
+}
+
+/* Valor em negociação à esquerda integrado à composição */
+.botanical-hero-valor {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.botanical-hero-valor span {
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: #c9d8c4;
+}
+
+.botanical-hero-valor strong {
+  font-family: var(--fonte-editorial);
+  font-size: clamp(2.1rem, 3.6vw, 3.1rem);
+  font-weight: 500;
+  letter-spacing: -.025em;
+  line-height: 1.04;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Indicadores do carrossel com barra de progresso temporal */
+.botanical-hero-indicadores {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 2px;
+}
+.hero-dot {
+  position: relative;
+  overflow: hidden;
+  width: 8px;
+  height: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #e4ebd938;
+  cursor: pointer;
+  transition: width 300ms var(--curva), background-color 240ms var(--curva);
+}
+.hero-dot:hover {
+  background: #e4ebd975;
+}
+.hero-dot[data-ativo="true"] {
+  width: 30px;
+  background: #e4ebd942;
+}
+.hero-dot-progresso {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: #faf9f4;
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 110ms linear;
+}
+.hero-pausa-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 18px;
+  margin-left: 2px;
+  padding: 0;
+  border: 1px solid rgba(228, 235, 217, 0.22);
+  border-radius: 6px;
+  background: rgba(15, 37, 29, 0.36);
+  color: #d6e2d1;
+  font-size: 0.56rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.72;
+  transition: opacity 180ms var(--curva), background-color 180ms var(--curva), border-color 180ms var(--curva);
+}
+.hero-pausa-btn:hover,
+.hero-pausa-btn:focus-visible {
+  opacity: 1;
+  background: rgba(15, 37, 29, 0.7);
+  border-color: rgba(228, 235, 217, 0.5);
+  color: #ffffff;
+}
+
+/* Transição tipográfica separada (título 240ms, valor 380ms) */
+.botanical-hero-valor span {
+  transition: opacity 240ms var(--curva);
+}
+.botanical-hero-valor strong {
+  transition: opacity 240ms var(--curva), transform 260ms var(--curva);
+}
+.botanical-hero-valor.saindo span {
+  opacity: 0;
+}
+.botanical-hero-valor.saindo strong {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.botanical-hero-valor.entrando span {
+  animation: hero-label-entrar 260ms var(--curva) both;
+}
+.botanical-hero-valor.entrando strong {
+  animation: hero-valor-entrar 390ms var(--curva) 45ms both;
+}
+@keyframes hero-label-entrar {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes hero-valor-entrar {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Composição Botânica Multicamadas (sombras + transição central + ramo principal) */
+.botanical-branch {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.botanical-branch-luxury {
+  right: -6px;
+  top: -8px;
+  bottom: -8px;
+  width: min(68%, 760px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.botanical-branch-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.botanical-shadow-layer {
+  filter: blur(11px);
+  opacity: .72;
+  will-change: transform;
+}
+.botanical-layer-back,
+.botanical-layer-front {
+  will-change: transform;
+}
+
+.botanical-leaf {
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px #06140e60);
+  will-change: transform;
+}
+
+/* Atmosfera por slide ajustando sutilmente a profundidade das camadas */
+.botanical-luxury-hero[data-atmosfera="aprovado"] .botanical-layer-front {
+  filter: saturate(1.08) brightness(1.03);
+}
+.botanical-luxury-hero[data-atmosfera="conversao"] .botanical-layer-back {
+  opacity: 0.92;
+  filter: sepia(0.12) saturate(1.06);
+}
+.botanical-luxury-hero[data-atmosfera="marca"] .botanical-layer-front {
+  filter: brightness(1.05);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .botanical-branch-svg {
+    animation: botanical-leaf-reveal 680ms var(--curva) both;
+  }
+  .botanical-leaf-shadow {
+    animation: botanical-ambient-light 10s ease-in-out infinite alternate;
+  }
+}
+
+.pagina-inativa .botanical-leaf-shadow {
+  animation-play-state: paused !important;
+}
+
+@keyframes botanical-leaf-reveal {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes botanical-ambient-light {
+  from { opacity: .86; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 1040px) {
+  .botanical-luxury-hero {
+    min-height: auto;
+  }
+  .botanical-hero-conteudo {
+    grid-template-columns: 1fr;
+    padding-right: clamp(0px, 12vw, 120px);
+  }
+  .botanical-hero-valor {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid #e4ebd92e;
+    padding-top: 12px;
+  }
+}
+
+@media (max-width: 690px) {
+  .botanical-hero-conteudo {
+    padding-right: 0;
+  }
+  .botanical-branch-luxury {
+    width: 180px;
+    opacity: .35;
+  }
+}
