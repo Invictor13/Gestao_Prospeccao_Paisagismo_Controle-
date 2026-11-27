@@ -10,10 +10,22 @@
   const menu = document.querySelector("#menu-mobile");
   const ferramentas = document.querySelector("#ferramentas-sistema");
   const menuGestao = document.querySelector("#menu-gestao");
-  document.querySelector("#abrir-sobre-dev").addEventListener("click", () => {
-    document.querySelector("#sobre-dev").showModal();
+  const backdropSidebar = document.querySelector("#sidebar-backdrop");
+  const modalSobreDev = document.querySelector("#sobre-dev");
+  const rodapeInterno = document.querySelector(".rodape-interno");
+  const btnAlternarRodape = document.querySelector("#alternar-rodape");
+  btnAlternarRodape?.addEventListener("click", () => {
+    const expandido = rodapeInterno?.classList.toggle("expandido");
+    btnAlternarRodape.setAttribute("aria-expanded", String(Boolean(expandido)));
+  });
+  document.querySelector("#abrir-sobre-dev")?.addEventListener("click", () => {
+    modalSobreDev?.showModal();
+  });
+  modalSobreDev?.addEventListener("click", (evento) => {
+    if (evento.target === modalSobreDev) modalSobreDev.close();
   });
   const demo = /(?:^\?|&)demo=1(?:&|$)/.test(window.location?.search ?? "");
+  const shell = Paisagismo.appShell?.iniciar?.({ demo });
   let dados;
   let tela = "painel";
   const { clientes, modelos, retornos } = Paisagismo.telasComerciais;
@@ -22,21 +34,24 @@
 
   function menuAberto(aberto) {
     menu.setAttribute("aria-expanded", String(aberto));
+    if (backdropSidebar) backdropSidebar.hidden = !aberto;
   }
   menu.addEventListener("click", () => menuAberto(menu.getAttribute("aria-expanded") !== "true"));
-  document.querySelector(".barra-app").addEventListener("keydown", (evento) => {
+  function aoEscapar(evento) {
     if (evento.key !== "Escape") return;
-    if (menuGestao?.open) {
-      menuGestao.open = false;
-      menuGestao.querySelector("summary")?.focus();
+    if (menu.getAttribute("aria-expanded") === "true") {
+      menuAberto(false);
+      menu.focus();
     } else if (ferramentas.open) {
       ferramentas.open = false;
       ferramentas.querySelector("summary").focus();
-    } else if (menu.getAttribute("aria-expanded") === "true") {
-      menuAberto(false);
-      menu.focus();
+    } else if (menuGestao?.open) {
+      menuGestao.open = false;
+      menuGestao.querySelector("summary")?.focus();
     }
-  });
+  }
+  document.querySelector(".barra-app").addEventListener("keydown", aoEscapar);
+  if (typeof document.addEventListener === "function") document.addEventListener("keydown", aoEscapar);
 
   function preferencia(seletor, chave, classe) {
     const controle = document.querySelector(seletor);
@@ -148,9 +163,9 @@
     }
     const pagina = document.createElement("div");
     pagina.className = "entrada-tela";
-    if (["historico", "clientes", "retornos"].includes(destino)) pagina.classList.add("tela-centralizada");
     pagina.append(...telas[destino](ctx, item));
     conteudo.replaceChildren(pagina);
+    shell?.atualizarTelaAtiva?.(destino);
     window.scrollTo(0, 0);
   }
 
@@ -207,7 +222,7 @@
     const aberto = menu.getAttribute("aria-expanded") === "true";
     menuAberto(false);
     ferramentas.open = false;
-    if (menuGestao) menuGestao.open = false;
+    if (menuGestao && document.body?.dataset?.sidebar === "recolhido") menuGestao.open = false;
     navegar(botao.dataset.tela);
     if (aberto) {
       const titulo = conteudo.querySelector("h1");

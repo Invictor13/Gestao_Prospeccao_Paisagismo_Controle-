@@ -1,3 +1,97 @@
+/* Motion Design System — Flora em Folha */
+:root {
+  --motion-hover: 150ms;
+  --motion-icone: 180ms;
+  --motion-expansao: 240ms;
+  --motion-painel-abrir: 360ms;
+  --motion-painel-fechar: 280ms;
+  --motion-transferencia: 360ms;
+  --motion-curva-natural: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-curva-saida: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Container Transform — Janela contextual animada */
+.flora-ct-dialog {
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  max-width: min(calc(100vw - 28px), 720px);
+  width: 100%;
+  overflow: visible;
+}
+.flora-ct-dialog[data-tamanho="compacto"] {
+  max-width: min(calc(100vw - 28px), 520px);
+}
+.flora-ct-dialog[data-tamanho="analitico"] {
+  max-width: min(calc(100vw - 28px), 480px);
+}
+.flora-ct-dialog::backdrop {
+  background: rgba(13, 33, 26, 0.26);
+  backdrop-filter: blur(1.5px);
+  opacity: 0;
+  transition: opacity 220ms var(--motion-curva-natural);
+}
+.flora-ct-dialog[data-visivel="true"]::backdrop {
+  opacity: 1;
+}
+.flora-ct-dialog[data-fechando="true"]::backdrop {
+  opacity: 0;
+  transition: opacity 200ms var(--motion-curva-saida);
+}
+.flora-ct-card {
+  display: grid;
+  max-height: min(88dvh, 760px);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border-radius: 16px;
+  border: 1px solid #2b5443;
+  background: #fcfbf7;
+  color: var(--earth);
+  box-shadow: 0 22px 54px rgba(10, 28, 21, 0.24);
+  overflow: hidden;
+  transform-origin: center center;
+  will-change: transform, opacity;
+  transition:
+    transform 250ms var(--motion-curva-natural),
+    opacity 220ms var(--motion-curva-natural);
+}
+.flora-ct-dialog[data-fechando="true"] .flora-ct-card {
+  transition:
+    transform 210ms var(--motion-curva-saida),
+    opacity 190ms var(--motion-curva-saida);
+}
+.flora-ct-corpo {
+  overflow-y: auto;
+  padding: 18px 22px;
+  opacity: 0;
+  transition: opacity 220ms var(--motion-curva-natural) 90ms;
+}
+.flora-ct-dialog[data-visivel="true"] .flora-ct-corpo {
+  opacity: 1;
+}
+.flora-ct-dialog[data-fechando="true"] .flora-ct-corpo {
+  opacity: 0;
+  transition: opacity 120ms var(--motion-curva-saida);
+}
+
+@keyframes flora-pulso-confirmacao {
+  0% { background-color: #e4ebd9; }
+  100% { background-color: transparent; }
+}
+.atualizado-pulso {
+  animation: flora-pulso-confirmacao 650ms var(--motion-curva-natural);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flora-ct-dialog::backdrop,
+  .flora-ct-card,
+  .flora-ct-corpo,
+  .atualizado-pulso {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
 /* Background topográfico + papel algodão sutil */
 body::before {
   content: "";
@@ -156,6 +250,27 @@ body::after {
   }
   .entrada-tela > :nth-child(2) { animation-delay: 45ms; }
   .entrada-tela > :nth-child(3) { animation-delay: 85ms; }
+  .atalhos-painel-equilibrado > * {
+    animation: entrada-tela var(--duracao-cartao) var(--curva) both;
+  }
+  .atalhos-painel-equilibrado > :nth-child(1) { animation-delay: 30ms; }
+  .atalhos-painel-equilibrado > :nth-child(2) { animation-delay: 65ms; }
+  .atalhos-painel-equilibrado > :nth-child(3) { animation-delay: 100ms; }
+  .atalhos-painel-equilibrado > :nth-child(4) { animation-delay: 135ms; }
+  .painel-grade-equilibrada > * {
+    animation: entrada-tela var(--duracao-tela) var(--curva) 110ms both;
+  }
+  .painel-grade-equilibrada > :nth-child(2) { animation-delay: 155ms; }
+  .analise-expansivel[open] .analise-conteudo {
+    animation: expandir-detalhes var(--duracao-detalhes) var(--curva);
+  }
+  .grafico-barra {
+    transform-origin: bottom;
+    animation: crescer-coluna 420ms var(--curva) 140ms both;
+  }
+  .seg-funil {
+    animation: preencher-barra 480ms var(--curva) 140ms both;
+  }
   #status:not([hidden]) { animation: toast-entrar 220ms var(--curva); }
   .gaveta-lateral[open] { animation: gaveta-entrar 240ms var(--curva); }
   .gaveta-lateral[open]::backdrop { animation: fade-backdrop 220ms ease-out; }
@@ -182,13 +297,14 @@ body::after {
   .editor,
   .cartao-proposta-item,
   .item-agenda,
-  .indicadores-secundarios > div,
+  .indicador-kpi,
   .item-ranking,
   .funil-linha {
     transition:
       background-color var(--duracao-cartao) var(--curva),
       border-color var(--duracao-cartao) var(--curva),
       box-shadow var(--duracao-cartao) var(--curva),
+      transform var(--duracao-cartao) var(--curva),
       opacity var(--duracao-cartao) var(--curva);
   }
   .editor::before,
@@ -257,10 +373,16 @@ body::after {
     .catalogo-modelos .cartao:hover,
     .cartao-proposta-item:hover,
     .item-agenda:hover,
-    .indicadores-secundarios > div:hover {
+    .indicador-kpi:hover {
       border-color: var(--salvia);
       background-color: #fffefb;
       box-shadow: var(--sombra-elevada);
+    }
+    .indicador-kpi:hover {
+      transform: translateY(-1px);
+    }
+    .indicador-kpi:active {
+      transform: scale(0.99);
     }
     .catalogo-modelos .cartao:hover .icone-modelo {
       background: var(--floresta);
@@ -347,6 +469,10 @@ body::after {
 @keyframes preencher-barra {
   from { transform: scaleX(0.18); transform-origin: left; }
   to { transform: scaleX(1); transform-origin: left; }
+}
+@keyframes crescer-coluna {
+  from { transform: scaleY(0.08); opacity: .4; }
+  to { transform: scaleY(1); opacity: 1; }
 }
 @keyframes pulso-preco {
   0% { box-shadow: 0 0 0 0 #b88a4444; }

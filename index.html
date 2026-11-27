@@ -5,12 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Flora em Folha | Gestão para paisagistas</title>
   <link rel="icon" type="image/png" href="assets/flora-em-folha.png">
-  <link rel="stylesheet" href="css/base.css?v=4.6">
-  <link rel="stylesheet" href="css/componentes.css?v=4.6">
-  <link rel="stylesheet" href="css/movimento.css?v=4.6">
-  <link rel="stylesheet" href="css/proposta.css?v=4.6">
-  <link rel="stylesheet" href="css/experiencia.css?v=4.6">
-  <link rel="stylesheet" href="css/espaco-trabalho.css?v=4.6">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/base.css?v=7.0">
+  <link rel="stylesheet" href="css/componentes.css?v=7.0">
+  <link rel="stylesheet" href="css/movimento.css?v=7.0">
+  <link rel="stylesheet" href="css/proposta.css?v=7.0">
+  <link rel="stylesheet" href="css/experiencia.css?v=7.0">
+  <link rel="stylesheet" href="css/botanica.css?v=8.0">
+  <link rel="stylesheet" href="css/sidebar.css?v=8.0">
+  <link rel="stylesheet" href="css/espaco-trabalho.css?v=8.0">
   <script defer src="js/dados/modelo-inicial.js"></script>
   <script defer src="js/dados/comercial.js"></script>
   <script defer src="js/dominio/custos.js"></script>
@@ -21,6 +26,7 @@
   <script defer src="js/dados/demonstracao.js"></script>
   <script defer src="js/dominio/painel.js"></script>
   <script defer src="js/telas/componentes.js"></script>
+  <script defer src="js/telas/botanica.js"></script>
   <script defer src="js/telas/custos.js"></script>
   <script defer src="js/telas/etapas.js"></script>
   <script defer src="js/telas/orcamento.js"></script>
@@ -28,6 +34,7 @@
   <script defer src="js/telas/comercial.js"></script>
   <script defer src="js/telas/proposta.js"></script>
   <script defer src="js/telas/painel.js"></script>
+  <script defer src="js/telas/app-shell.js"></script>
   <script defer src="js/app.js"></script>
 </head>
 <body>
@@ -44,68 +51,183 @@
       <span class="intro-subtitulo">Precificação &amp; gestão para paisagismo</span>
     </div>
   </div>
-  <header class="barra-app">
-    <div class="barra-interna">
-    <div class="marca"><img class="logo-flora" src="assets/flora-em-folha.png" alt="" width="54" height="54"><strong>Flora em Folha</strong></div>
-    <button type="button" id="menu-mobile" aria-expanded="false" aria-controls="navegacao-sistema ferramentas-sistema">Menu</button>
-    <nav id="navegacao-sistema" aria-label="Seções do sistema">
-      <button type="button" data-tela="painel" aria-current="page">Visão geral</button>
-      <button type="button" data-tela="orcamento">Orçamento</button>
-      <button type="button" data-tela="etapas">Etapas do projeto</button>
-      <button type="button" data-tela="custos">Custos da operação</button>
-      <details class="menu-grupo" id="menu-gestao">
-        <summary>Gestão</summary>
-        <div class="submenu-nav">
-          <button type="button" data-tela="historico">Orçamentos salvos</button>
-          <button type="button" data-tela="clientes">Clientes</button>
-          <button type="button" data-tela="retornos">Próximos contatos</button>
-          <button type="button" data-tela="modelos">Modelos de serviço</button>
+  <div id="sidebar-backdrop" class="sidebar-backdrop" hidden></div>
+  <div class="app-shell">
+    <aside class="barra-app" aria-label="Navegação principal">
+      <div class="sidebar-topo">
+        <div class="marca">
+          <img class="logo-flora" src="assets/flora-em-folha.png" alt="" width="36" height="36">
+          <strong class="marca-texto">Flora em Folha</strong>
         </div>
-      </details>
-    </nav>
-    <details class="ferramentas" id="ferramentas-sistema">
-      <summary>Ferramentas</summary>
-      <div class="backup">
-      <a id="link-demonstracao" href="index.html?demo=1" target="_blank" rel="noopener">Abrir demonstração</a>
-      <label class="preferencia-fundo"><input type="checkbox" id="animar-fundo"> Animar fundo</label>
-      <label class="preferencia-fundo"><input type="checkbox" id="modo-compacto"> Listas compactas</label>
-      <button type="button" id="exportar">Exportar backup</button>
-      <button type="button" id="importar">Importar backup</button>
-      <input type="file" id="arquivo" accept=".json,application/json" hidden>
-      <small>Modo offline</small>
-      <small id="persistencia"></small>
+        <button type="button" id="btn-recolher-sidebar" class="btn-sidebar-controle" aria-label="Recolher menu lateral" aria-expanded="true" title="Recolher menu">
+          <span class="icone-recolher" aria-hidden="true"></span>
+        </button>
       </div>
-    </details>
+
+      <div class="sidebar-corpo">
+        <nav id="navegacao-sistema" aria-label="Seções do sistema">
+          <div class="sidebar-grupo">
+            <span class="sidebar-grupo-rotulo">Principal</span>
+            <button type="button" class="nav-item" data-tela="painel" data-icone="painel" data-tooltip="Visão geral" aria-current="page">
+              <span class="nav-icone" aria-hidden="true"></span>
+              <span class="nav-texto">Visão geral</span>
+            </button>
+            <button type="button" class="nav-item" data-tela="orcamento" data-icone="orcamento" data-tooltip="Orçamento">
+              <span class="nav-icone" aria-hidden="true"></span>
+              <span class="nav-texto">Orçamento</span>
+            </button>
+            <button type="button" class="nav-item" data-tela="etapas" data-icone="etapas" data-tooltip="Etapas do projeto">
+              <span class="nav-icone" aria-hidden="true"></span>
+              <span class="nav-texto">Etapas do projeto</span>
+            </button>
+            <button type="button" class="nav-item" data-tela="custos" data-icone="custos" data-tooltip="Custos da operação">
+              <span class="nav-icone" aria-hidden="true"></span>
+              <span class="nav-texto">Custos da operação</span>
+            </button>
+          </div>
+
+          <div class="sidebar-grupo">
+            <details class="menu-grupo" id="menu-gestao">
+              <summary class="nav-item" data-icone="gestao" data-tooltip="Gestão comercial">
+                <span class="nav-icone" aria-hidden="true"></span>
+                <span class="nav-texto">Gestão comercial</span>
+              </summary>
+              <div class="submenu-nav">
+                <button type="button" class="nav-item nav-subitem" data-tela="historico" data-icone="historico" data-tooltip="Orçamentos salvos">
+                  <span class="nav-icone" aria-hidden="true"></span>
+                  <span class="nav-texto">Orçamentos salvos</span>
+                </button>
+                <button type="button" class="nav-item nav-subitem" data-tela="clientes" data-icone="clientes" data-tooltip="Clientes">
+                  <span class="nav-icone" aria-hidden="true"></span>
+                  <span class="nav-texto">Clientes</span>
+                </button>
+                <button type="button" class="nav-item nav-subitem" data-tela="retornos" data-icone="retornos" data-tooltip="Próximos contatos">
+                  <span class="nav-icone" aria-hidden="true"></span>
+                  <span class="nav-texto">Próximos contatos</span>
+                </button>
+                <button type="button" class="nav-item nav-subitem" data-tela="modelos" data-icone="modelos" data-tooltip="Modelos de serviço">
+                  <span class="nav-icone" aria-hidden="true"></span>
+                  <span class="nav-texto">Modelos de serviço</span>
+                </button>
+              </div>
+            </details>
+          </div>
+        </nav>
+
+        <div class="sidebar-grupo sidebar-recursos">
+          <span class="sidebar-grupo-rotulo">Recursos</span>
+          <details class="ferramentas" id="ferramentas-sistema">
+            <summary class="nav-item" data-icone="ferramentas" data-tooltip="Ferramentas">
+              <span class="nav-icone" aria-hidden="true"></span>
+              <span class="nav-texto">Ferramentas</span>
+            </summary>
+            <div class="backup">
+              <a id="link-demonstracao" href="index.html?demo=1" target="_blank" rel="noopener">Abrir demonstração</a>
+              <label class="preferencia-fundo"><input type="checkbox" id="animar-fundo"> Animar fundo</label>
+              <label class="preferencia-fundo"><input type="checkbox" id="modo-compacto"> Listas compactas</label>
+              <button type="button" id="exportar">Exportar backup</button>
+              <button type="button" id="importar">Importar backup</button>
+              <input type="file" id="arquivo" accept=".json,application/json" hidden>
+              <small>Modo offline</small>
+              <small id="persistencia"></small>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div id="sidebar-botanica-base" class="sidebar-botanica-base" aria-hidden="true"></div>
+    </aside>
+
+    <div class="app-coluna">
+      <header class="barra-contexto" aria-label="Menu móvel">
+        <button type="button" id="menu-mobile" aria-expanded="false" aria-controls="navegacao-sistema ferramentas-sistema">Menu</button>
+      </header>
+
+      <main id="principal">
+        <div id="aviso-demonstracao" hidden>
+          <p><strong>Modo demonstração.</strong> Use somente dados fictícios. As alterações desta aba são descartadas ao recarregar.</p>
+          <a href="index.html">Abrir ambiente local</a>
+        </div>
+        <div class="toast-camada">
+          <p id="status" role="status" hidden></p>
+          <button id="tentar-gravar" class="botao secundario" type="button" hidden>Tentar gravar novamente</button>
+        </div>
+        <section id="conteudo"></section>
+      </main>
+
+      <footer class="rodape-app" aria-label="Rodapé institucional">
+        <div class="rodape-interno">
+          <div class="rodape-topo-botanico">
+            <span class="rodape-linha" aria-hidden="true"></span>
+            <button type="button" class="rodape-simbolo-btn" id="alternar-rodape" aria-expanded="false" aria-controls="rodape-conteudo-expandido" aria-label="Expandir informações do rodapé">
+              <svg viewBox="0 0 48 26" width="38" height="21" aria-hidden="true">
+                <path d="M24 23 C24 14 24 6 24 2 C27 7 28 15 24 23 Z" fill="currentColor"/>
+                <path d="M24 23 C24 14 24 6 24 2 C21 7 20 15 24 23 Z" fill="currentColor" opacity="0.88"/>
+                <path d="M23 23 C15 20 8 14 5 7 C12 9 19 14 23 23 Z" fill="currentColor" opacity="0.92"/>
+                <path d="M25 23 C33 20 40 14 43 7 C36 9 29 14 25 23 Z" fill="currentColor" opacity="0.92"/>
+              </svg>
+            </button>
+            <span class="rodape-linha" aria-hidden="true"></span>
+          </div>
+          <div class="rodape-expansivel" id="rodape-conteudo-expandido">
+            <div class="rodape-expansivel-inner">
+              <strong class="rodape-marca">Flora em Folha</strong>
+              <button class="link-rodape-dev" type="button" id="abrir-sobre-dev" aria-haspopup="dialog">
+                Desenvolvido por <span>Victor Ladislau Viana</span>
+              </button>
+            </div>
+          </div>
+          <svg class="rodape-marca-dagua" viewBox="0 0 120 96" aria-hidden="true">
+            <path d="M84 96 C82 62 92 30 112 8 C110 38 100 68 84 96 Z" fill="currentColor"/>
+            <path d="M78 96 C62 74 44 54 22 44 C46 46 66 64 78 96 Z" fill="currentColor" opacity="0.72"/>
+            <path d="M90 96 C96 72 108 54 120 44 C114 66 104 82 90 96 Z" fill="currentColor" opacity="0.65"/>
+          </svg>
+        </div>
+      </footer>
     </div>
-  </header>
-  <main id="principal">
-    <div id="aviso-demonstracao" hidden>
-      <p><strong>Modo demonstração.</strong> Use somente dados fictícios. As alterações desta aba são descartadas ao recarregar.</p>
-      <a href="index.html">Abrir ambiente local</a>
+  </div>
+  <dialog id="sobre-dev" aria-labelledby="titulo-sobre-dev">
+    <header class="sobre-dev-topo">
+      <div>
+        <h2 id="titulo-sobre-dev">Sobre o Desenvolvedor</h2>
+        <p class="sobre-dev-subtitulo">Engenharia de Software &amp; Arquitetura Flora em Folha</p>
+      </div>
+      <form method="dialog">
+        <button class="sobre-dev-fechar" type="submit" aria-label="Fechar janela">
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+            <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </form>
+    </header>
+    <div class="sobre-dev-corpo">
+      <div class="sobre-dev-perfil">
+        <div class="sobre-dev-avatar-anel">
+          <img src="assets/victor-ladislau.jpg" alt="Victor Ladislau Viana" class="sobre-dev-foto">
+        </div>
+        <div class="sobre-dev-info">
+          <h3 class="sobre-dev-nome">Victor Ladislau Viana</h3>
+          <p class="sobre-dev-cargo">Engenharia de Software &bull; Criador do Flora em Folha</p>
+          <p class="sobre-dev-bio">Engenheiro e desenvolvedor focado na criação de soluções utilitárias de alta performance, automação e arquiteturas que garantem privacidade irrestrita, velocidade instantânea e processamento 100% no cliente.</p>
+        </div>
+      </div>
+      <hr class="sobre-dev-divisor">
+      <p class="sobre-dev-rotulo-links">CONECTE-SE E ACOMPANHE OS PROJETOS:</p>
+      <div class="sobre-dev-links">
+        <a class="sobre-dev-btn sobre-dev-btn-github" href="https://github.com/Invictor13" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path fill="currentColor" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span>GitHub Oficial<br><small>(@Invictor13)</small></span>
+        </a>
+        <a class="sobre-dev-btn sobre-dev-btn-linkedin" href="https://www.linkedin.com/in/victor-ladislau-14402a170/" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path fill="currentColor" d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+          </svg>
+          <span>LinkedIn Profissional</span>
+        </a>
+      </div>
     </div>
-    <div class="toast-camada">
-      <p id="status" role="status" hidden></p>
-      <button id="tentar-gravar" class="botao secundario" type="button" hidden>Tentar gravar novamente</button>
-    </div>
-    <section id="conteudo"></section>
-  </main>
-  <footer class="rodape-app">
-    <div class="rodape-interno">
-      <p>Desenvolvido por <strong>Victor Ladislau Viana</strong></p>
-      <nav aria-label="Sobre o projeto">
-        <a href="https://www.linkedin.com/in/victor-ladislau-14402a170/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-        <button class="link-rodape" type="button" id="abrir-sobre-dev" aria-haspopup="dialog">Sobre o desenvolvedor</button>
-      </nav>
-    </div>
-  </footer>
-  <dialog id="sobre-dev" aria-labelledby="nome-dev">
-    <span class="avatar-dev" aria-hidden="true">VV</span>
-    <h2 id="nome-dev">Victor Ladislau Viana</h2>
-    <p>Desenvolvedor do Flora em Folha, ferramenta de gestão de projetos e propostas para paisagistas.</p>
-    <form method="dialog" class="acoes">
-      <a class="botao secundario" href="https://www.linkedin.com/in/victor-ladislau-14402a170/" target="_blank" rel="noopener noreferrer">Ver perfil no LinkedIn</a>
-      <button class="botao secundario" autofocus>Fechar</button>
-    </form>
   </dialog>
   <dialog id="prever-backup" aria-labelledby="titulo-backup">
     <h2 id="titulo-backup">Restaurar backup</h2>

@@ -1,31 +1,43 @@
 :root {
   color-scheme: light;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-  color: #1b2b25;
-  background: #f4f2ec;
+  --fonte-ui: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --fonte-editorial: "Fraunces", Georgia, "Times New Roman", serif;
+  font-family: var(--fonte-ui);
+  color: #26372c;
+  background: #f7f5ec;
 
-  /* Paleta Atelier Botânico & Prancheta Técnica */
-  --floresta: #143329;
-  --folhagem: #275b44;
-  --salvia: #769d83;
-  --brotos: #dde8d3;
-  --marfim: #faf8f2;
-  --papel-fundo: #f4f2ec;
-  --superficie: #fffdf9;
-  --terracota: #b0623e;
-  --ocre: #b88a44;
+  /* Paleta Botanical Minimalism */
+  --forest: #18392d;
+  --fern: #4d7852;
+  --sage: #a9bd91;
+  --mist: #e4ebd9;
+  --linen: #f7f5ec;
+  --terracotta: #bf805f;
+  --harvest: #c4a66b;
+  --eucalyptus: #748e79;
+  --earth: #26372c;
 
-  /* Aliases semânticos */
+  /* Aliases semânticos compartilhados */
+  --floresta: var(--forest);
+  --folhagem: var(--fern);
+  --salvia: var(--sage);
+  --brotos: var(--mist);
+  --marfim: #faf9f4;
+  --papel-fundo: var(--linen);
+  --superficie: #ffffff;
+  --grafite: var(--earth);
+  --terracota: var(--terracotta);
+  --ocre: var(--harvest);
   --papel: var(--marfim);
-  --lima-claro: var(--brotos);
-  --verde: var(--folhagem);
-  --verde-escuro: #1a4032;
-  --borda: #dedbd0;
-  --borda-forte: #b8b5a6;
-  --suave: #526158;
-  --alerta-fundo: #fbf2ec;
-  --alerta-borda: #d8a389;
-  --alerta-texto: #7d3618;
+  --lima-claro: var(--mist);
+  --verde: var(--fern);
+  --verde-escuro: var(--forest);
+  --borda: #e2dfd3;
+  --borda-forte: #c4c1b2;
+  --suave: #566b5b;
+  --alerta-fundo: #fbf3ee;
+  --alerta-borda: #dfb199;
+  --alerta-texto: #854426;
 
   /* Métricas e elevação contida */
   --raio: 11px;
@@ -49,10 +61,8 @@
 body {
   margin: 0;
   min-height: 100dvh;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
   background-color: var(--papel-fundo);
-  color: #1b2b25;
+  color: #26372c;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -65,11 +75,11 @@ main {
 }
 h1, h2, h3, p { margin: 0; }
 h1 {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.9rem, 3.2vw, 2.85rem);
+  font-family: var(--fonte-editorial);
+  font-size: clamp(1.75rem, 2.8vw, 2.55rem);
   line-height: 1.08;
   font-weight: 500;
-  letter-spacing: -.03em;
+  letter-spacing: -.028em;
   color: var(--floresta);
   overflow-wrap: anywhere;
 }
@@ -93,4 +103,28 @@ button { cursor: pointer; }
 :focus-visible {
   outline: 2px solid var(--folhagem);
   outline-offset: 2px;
+}
+
+/* Barras de rolagem internas discretas */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #b8b5a680 transparent;
+}
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: #b8b5a680;
+  border-radius: 99px;
+}
+*::-webkit-scrollbar-thumb:hover { background: #769d83; }
+
+@media (min-width: 1041px) {
+  body {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  main {
+    min-height: 0;
+    overflow: hidden;
+  }
 }
